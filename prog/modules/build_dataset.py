@@ -231,6 +231,8 @@ class Data:
     def dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
+            if ensembl_trx[trx]['gene_name'] in [x['gene_name'] for x in dataset.values()]:
+                continue
             biotype = ensembl_trx[trx]['biotype']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
@@ -238,7 +240,7 @@ class Data:
                 start, stop = attrs['start'], attrs['stop']
                 if biotype == 'protein_coding' and orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor and len(map_seq(seq)) < 30000:
+            if 1 in seq_tensor and len(map_seq(seq)) < 15000:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'biotype': biotype,
