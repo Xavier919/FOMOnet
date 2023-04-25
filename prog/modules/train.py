@@ -9,9 +9,9 @@ import os
 import shutil
 import numpy as np
 #project specific imports
-from modules.model import FOMOnet
-from modules.transcripts import Transcripts
-from modules.utils import *
+from model import FOMOnet
+from transcripts import Transcripts
+from utils import *
 import argparse
 
 #create runs directory for curves visualization with tensorboard
@@ -30,6 +30,7 @@ parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
 if __name__ == "__main__":
+    print(args.tag)
 
     #load train & test data
     X_train, y_train = pickle.load(open(args.train_data, 'rb'))

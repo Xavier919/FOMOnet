@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from modules.utils import *
 
 class Data:
-    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
+    def __init__(self, OP_tsv, Ens_trx, trx_fasta):
         
         self.biotype_grouping = {
             'protein_coding': 'protein_coding',
@@ -91,7 +91,6 @@ class Data:
         self.OP_tsv = OP_tsv
         self.Ens_trx = Ens_trx
         self.ensembl95_trxps = pyfaidx.Fasta(trx_fasta)
-        self.sorfs = sorfs
         self.OP_prot_MS, self.OP_trx_altprot = self.get_altprot_info()
 
     def get_op_trx(self):
@@ -240,7 +239,7 @@ class Data:
                 start, stop = attrs['start'], attrs['stop']
                 if biotype == 'protein_coding' and orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor and len(map_seq(seq)) < 15000:
+            if 1 in seq_tensor and seq_len < 10000:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'biotype': biotype,
@@ -268,33 +267,6 @@ class Data:
                                 'biotype': biotype,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
-    
-    def sorf_dataset(self, ensembl_trx):
-        sorfs = pd.read_excel(self.sorfs, sheet_name=0)
-        sorfs = sorfs.set_index('orf_name').T.to_dict()
-        sorf_dataset = dict()
-        for _, attrs in tqdm(sorfs.items()):
-            trx = attrs['transcript']
-            orf_sequence = attrs['orf_sequence']
-            orf_length = attrs['orf_length']
-            if trx not in ensembl_trx:
-                continue
-            seq = ensembl_trx[trx]['sequence']
-            for start, stop in self.find_orfs(seq):
-                if stop - start == orf_length and orf_sequence == self.translate(seq[start:stop], 0):
-                    if trx not in sorf_dataset:
-                        seq_tensor = torch.zeros(1, len(seq)).view(-1)
-                        seq_tensor = self.map_cds(seq_tensor, start, stop, 1)
-                        mapped_seq = self.map_seq(seq)
-                        sorf_dataset[trx] = {'mapped_seq': mapped_seq,
-                                            'mapped_cds': seq_tensor,
-                                            'biotype': ensembl_trx[trx]['biotype'],
-                                            'gene_name': ensembl_trx[trx]['gene_name']}
-                    else:
-                        seq_tensor = sorf_dataset[trx]['mapped_cds']
-                        seq_tensor = self.map_cds(seq_tensor, start, stop, 1)
-                        sorf_dataset[trx]['mapped_cds'] = seq_tensor
-        return sorf_dataset
 
     def split_dataset(self, dataset, split_dict):
         for split in set(list(split_dict.values())):
