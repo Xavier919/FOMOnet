@@ -10,6 +10,7 @@ import torch
 from sklearn.model_selection import train_test_split
 import random
 from matplotlib import pyplot as plt
+import random
 from modules.utils import *
 
 class Data:
@@ -227,45 +228,62 @@ class Data:
                 trx_orfs[trx] = altprots
         return trx_orfs 
 
+    def get_rnd_trx(self, ensembl_trx, trx_orfs):
+        gene_trxps = dict()
+        for trx, orfs in trx_orfs.items():
+            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
+                continue
+            if len(ensembl_trx[trx]["sequence"]) > 30000:
+                continue
+            for orf, attrs in orfs.items():
+                gene = attrs["gene_name"]
+                if gene not in gene_trxps:
+                    gene_trxps[gene] = [trx]
+                else:
+                    gene_trxps[gene].append(trx)
+        selected_trxps = []
+        random.seed(5)
+        for gene, trxps in gene_trxps.items():
+            trx = random.choice(trxps)
+            selected_trxps.append(trx)
+        return selected_trxps
+
     def dataset(self, ensembl_trx, trx_orfs):
+        selected_trxps = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            if ensembl_trx[trx]['gene_name'] in [x['gene_name'] for x in dataset.values()]:
+            if trx not in selected_trxps:
                 continue
             biotype = ensembl_trx[trx]['biotype']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if biotype == 'protein_coding' and orf.startswith('ENSP'):
+                if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor and seq_len < 10000:
+            if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
-                                'biotype': biotype,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, prefix_ref='ENSP'):
+    def pseudogene_dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             biotype = ensembl_trx[trx]['biotype']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             orfs_loc = find_orfs(seq)
-            if any(x.startswith(prefix_ref) for x in orfs.keys()):
-                continue
             if biotype == 'pseudogene':
                 for orf, attrs in orfs.items():
                     start, stop = attrs['start'], attrs['stop']
                     if (start, stop) in orfs_loc:
                         if attrs['TE'] >= 2 or attrs['MS'] >= 2:
                             seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
-            if len(map_seq(seq)) < 30000:
-                dataset[trx] = {'mapped_seq': map_seq(seq),
-                                'mapped_cds': seq_tensor,
-                                'biotype': biotype,
-                                'gene_name': ensembl_trx[trx]['gene_name']}
+                if seq_len < 30000:
+                    dataset[trx] = {'mapped_seq': map_seq(seq),
+                                    'mapped_cds': seq_tensor,
+                                    'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
 
     def split_dataset(self, dataset, split_dict):
