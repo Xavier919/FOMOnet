@@ -1,15 +1,5 @@
-import csv
-from Bio import SeqIO
-import pyfaidx
-import pickle
-import numpy as np
 import torch
-from tqdm import tqdm_notebook as tqdm
-import pandas as pd
 import torch
-from sklearn.model_selection import train_test_split
-import random
-from matplotlib import pyplot as plt
 from torch.nn.utils.rnn import pad_sequence
 
 def pack_seqs(Xy):
