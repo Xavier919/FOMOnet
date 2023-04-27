@@ -298,7 +298,7 @@ class Data:
         for idx, split in enumerate(splits):
             for trx in split:
                 split_dict[trx] = idx
-
+        pickle.dump(split_dict, open('data/split_dict.pkl', 'wb'))
         for split in set(list(split_dict.values())):
 
             X_train = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] != split]

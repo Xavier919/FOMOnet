@@ -7,6 +7,7 @@ from torchmetrics import PrecisionRecallCurve
 from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
+from tqdm.notebook import tqdm
 from modules.utils import *
 
 def bin_pred(output, thresh):
@@ -70,11 +71,11 @@ def get_preds(model, X_test, y_test):
     preds = []
     model.eval()
     for X, y in tqdm(list(zip(X_test, y_test))):
-        X_ = torch.cat([torch.zeros(1000),X,torch.zeros(1000)],dim=0).cuda()
-        y_ = torch.cat([torch.zeros(1000),y,torch.zeros(1000)],dim=0).cuda()
-        X_one_hot = one_hot(X_).T.cuda()
+        X_ = torch.cat([torch.zeros(1000),X,torch.zeros(1000)],dim=0)
+        y_ = torch.cat([torch.zeros(1000),y,torch.zeros(1000)],dim=0)
+        X_one_hot = one_hot(X_).T
         outputs = model(X_one_hot).view(-1)
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
         preds.append((X_.cpu().detach().numpy(), y_.cpu().detach().numpy(), outputs.cpu().detach().numpy()))
     return preds
 
