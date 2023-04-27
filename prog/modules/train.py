@@ -37,7 +37,7 @@ if __name__ == "__main__":
     X_test, y_test = pickle.load(open(args.test_data, 'rb'))
 
     #pre-processing data for pytorch DataLoader
-    train_set = Transcripts(X_train[:10000], y_train[:10000])
+    train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)
 
     #hyperparameters
