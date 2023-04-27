@@ -272,29 +272,41 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             biotype = ensembl_trx[trx]['biotype']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
+            if seq_len > 30000:
+                continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             orfs_loc = find_orfs(seq)
+            if len(orfs_loc) == 0:
+                continue
             if biotype == 'pseudogene':
                 for orf, attrs in orfs.items():
                     start, stop = attrs['start'], attrs['stop']
                     if (start, stop) in orfs_loc:
                         if attrs['TE'] >= 2 or attrs['MS'] >= 2:
                             seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
-                if seq_len < 30000:
-                    dataset[trx] = {'mapped_seq': map_seq(seq),
-                                    'mapped_cds': seq_tensor,
-                                    'gene_name': ensembl_trx[trx]['gene_name']}
+                dataset[trx] = {'mapped_seq': map_seq(seq),
+                                'mapped_cds': seq_tensor,
+                                'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
 
-    def split_dataset(self, dataset, split_dict):
+    def split_dataset(self, dataset):
+        split_dict = dict()
+        trxps = [x for x in dataset.keys()]
+        random.seed(5)
+        random.shuffle(trxps)
+        splits = np.array_split(trxps, 5)
+        for idx, split in enumerate(splits):
+            for trx in split:
+                split_dict[trx] = idx
+
         for split in set(list(split_dict.values())):
 
-            X_train = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] != split and y["biotype"] != "pseudogene"]
-            y_train = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] != split and y["biotype"] != "pseudogene"]
+            X_train = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] != split]
+            y_train = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] != split]
             train_split = (X_train,y_train)
             pickle.dump(train_split, open(f'data/train_split{split}.pkl', 'wb'))
 
-            X_test = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] == split and y["biotype"] != "pseudogene"]
-            y_test = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] == split and y["biotype"] != "pseudogene"]
+            X_test = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] == split]
+            y_test = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] == split]
             test_split = (X_test,y_test)
             pickle.dump(test_split, open(f'data/test_split{split}.pkl', 'wb'))
