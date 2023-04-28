@@ -267,7 +267,7 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def pseudogene_dataset(self, ensembl_trx, trx_orfs):
+    def alt_dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             biotype = ensembl_trx[trx]['biotype']
@@ -276,17 +276,16 @@ class Data:
                 continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             orfs_loc = find_orfs(seq)
-            if len(orfs_loc) == 0:
-                continue
-            if biotype == 'processed_transcript':
+            if biotype in ["pseudogene", "ncRNA", "protein_coding"]:
                 for orf, attrs in orfs.items():
                     start, stop = attrs['start'], attrs['stop']
                     if (start, stop) in orfs_loc:
-                        if attrs['TE'] >= 5 or attrs['MS'] >= 5:
+                        if attrs['TE'] >= 2 or attrs['MS'] >= 2:
                             seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
-                                'gene_name': ensembl_trx[trx]['gene_name']}
+                                'gene_name': ensembl_trx[trx]['gene_name'],
+                                "biotype": biotype}
         return dataset
 
     def split_dataset(self, dataset):
