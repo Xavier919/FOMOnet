@@ -278,11 +278,11 @@ class Data:
             orfs_loc = find_orfs(seq)
             if len(orfs_loc) == 0:
                 continue
-            if biotype == 'pseudogene':
+            if biotype == 'processed_transcript':
                 for orf, attrs in orfs.items():
                     start, stop = attrs['start'], attrs['stop']
                     if (start, stop) in orfs_loc:
-                        if attrs['TE'] >= 2 or attrs['MS'] >= 2:
+                        if attrs['TE'] >= 5 or attrs['MS'] >= 5:
                             seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
