@@ -56,6 +56,8 @@ class FOMOnet(nn.Module):
 
         #encoder
         encode_block1 = self.conv_encoder1(x)
+        residual_block1 = self.res_encoder1(x)
+        encode_block1 += residual_block1
 
         encode_block2 = self.conv_encoder2(encode_block1)
         residual_block2 = self.res_encoder2(encode_block1)
