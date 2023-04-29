@@ -10,6 +10,7 @@ class FOMOnet(nn.Module):
 
         #encoder
         self.conv_encoder1 = self._conv_block(num_channels, 32)
+        self.res_encoder1 = self._residual_block(num_channels, 32)
         self.conv_encoder2 = self._contraction_block(32, 64)
         self.res_encoder2 = self._residual_block(32, 64)
         self.conv_encoder3 = self._contraction_block(64, 128)
