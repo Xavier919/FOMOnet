@@ -259,7 +259,7 @@ class Data:
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
+                if biotype == 'protein_coding' and orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
