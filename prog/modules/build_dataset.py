@@ -233,6 +233,8 @@ class Data:
         for trx, orfs in trx_orfs.items():
             if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
+            if ensembl_trx[trx]["tsl"] != 'tsl1':
+                continue
             if len(ensembl_trx[trx]["sequence"]) > 30000:
                 continue
             for orf, attrs in orfs.items():
@@ -259,7 +261,7 @@ class Data:
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if biotype == 'protein_coding' and orf.startswith('ENSP'):
+                if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
