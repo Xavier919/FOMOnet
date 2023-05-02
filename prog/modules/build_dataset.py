@@ -270,39 +270,26 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def nc_dataset(self, ensembl_trx, trx_orfs):
-        trx_cds = dict()
-        for trx, orfs in trx_orfs.items():
-            count = 0
-            for orf, attrs in orfs.items():
-                if attrs['TE'] >= 1 or attrs['MS'] >= 1:
-                    count += 1
-            trx_cds[trx] = count
-
+    def alt_dataset(self, ensembl_trx, trx_orfs, alt_trx):
         alt_dataset = dict()
         for trx, orfs in trx_orfs.items():
-            if ensembl_trx[trx]['biotype'] not in ['processed_transcript', 'pseudogene']:
+            if ensembl_trx[trx]['biotype'] != 'processed_transcript':
                 continue
-            check = 0
             if len(ensembl_trx[trx]['sequence']) > 30000:
                 continue
-            if trx_cds[trx] != 1:
+            if trx not in [x[0] for x in alt_trx]:
                 continue
             biotype = ensembl_trx[trx]['biotype']
-            tsl = ensembl_trx[trx]['tsl']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
-                if orf.startswith('ENSP') or orf.startswith('II_'):
-                    check = 1
-                if attrs['TE'] >= 3 or attrs['MS'] >= 3:
+                if trx in [x[0] for x in alt_trx] and orf in [x[1] for x in alt_trx]:
                     seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
-            if check == 0 and 1 in seq_tensor:
+            if 1 in seq_tensor:
                 alt_dataset[trx] = {'mapped_seq': map_seq(seq),
                                     'mapped_cds': seq_tensor,
                                     'gene_name': ensembl_trx[trx]['gene_name'],
-                                    "biotype": biotype,
-                                    'tsl': tsl}
+                                    "biotype": biotype}
         return alt_dataset
     
     def sorfs_dataset(self, ensembl_trx):
