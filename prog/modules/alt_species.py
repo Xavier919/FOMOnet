@@ -10,7 +10,7 @@ class Data:
     
     def get_trx(self):
         trx_dict = dict()
-        for name, seq in tqdm(self.read_fasta(self.alt_trx)):
+        for name, seq in tqdm(self.alt_trx):
             trx = name.split('>')[1]
             seq = str(seq)
             trx_dict[trx] = {'seq':seq}

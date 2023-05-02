@@ -71,8 +71,8 @@ def get_preds(model, X_test, y_test):
     preds = []
     model.eval()
     for X, y in tqdm(list(zip(X_test, y_test))):
-        X_ = torch.cat([torch.zeros(1000),X,torch.zeros(1000)],dim=0)
-        y_ = torch.cat([torch.zeros(1000),y,torch.zeros(1000)],dim=0)
+        X_ = torch.cat([torch.zeros(5000),X,torch.zeros(5000)],dim=0)
+        y_ = torch.cat([torch.zeros(5000),y,torch.zeros(5000)],dim=0)
         X_one_hot = one_hot(X_).T
         outputs = model(X_one_hot).view(-1)
         #torch.cuda.empty_cache()

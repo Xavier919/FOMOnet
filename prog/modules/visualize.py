@@ -11,7 +11,7 @@ def map_pred(X, y):
     ax.axvspan(target[0], target[1], facecolor='red', alpha=0.5)
     plt.ylim(0,1)
     plt.xlim(0,len(preds))
-    #plt.savefig('gapdh_pseudo.svg')
+    plt.savefig('pred.svg')
     plt.show()
 
 def map_preds(report, trx_orfs, ensembl_trx, n_display=5):

@@ -11,10 +11,11 @@ from sklearn.model_selection import train_test_split
 import random
 from matplotlib import pyplot as plt
 import random
+import pandas as pd
 from modules.utils import *
 
 class Data:
-    def __init__(self, OP_tsv, Ens_trx, trx_fasta):
+    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
         
         self.biotype_grouping = {
             'protein_coding': 'protein_coding',
@@ -93,6 +94,7 @@ class Data:
         self.Ens_trx = Ens_trx
         self.ensembl95_trxps = pyfaidx.Fasta(trx_fasta)
         self.OP_prot_MS, self.OP_trx_altprot = self.get_altprot_info()
+        self.sorfs = sorfs
 
     def get_op_trx(self):
         op_trx_accession = set()
@@ -256,7 +258,6 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             if trx not in selected_trxps:
                 continue
-            biotype = ensembl_trx[trx]['biotype']
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
@@ -269,26 +270,66 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs):
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            biotype = ensembl_trx[trx]['biotype']
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            if seq_len > 30000:
+    def nc_dataset(self, ensembl_trx, trx_orfs):
+        trx_cds = dict()
+        for trx, orfs in trx_orfs.items():
+            count = 0
+            for orf, attrs in orfs.items():
+                if attrs['TE'] >= 1 or attrs['MS'] >= 1:
+                    count += 1
+            trx_cds[trx] = count
+
+        alt_dataset = dict()
+        for trx, orfs in trx_orfs.items():
+            if ensembl_trx[trx]['biotype'] not in ['processed_transcript', 'pseudogene']:
                 continue
+            check = 0
+            if len(ensembl_trx[trx]['sequence']) > 30000:
+                continue
+            if trx_cds[trx] != 1:
+                continue
+            biotype = ensembl_trx[trx]['biotype']
+            tsl = ensembl_trx[trx]['tsl']
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
+            for orf, attrs in orfs.items():
+                if orf.startswith('ENSP') or orf.startswith('II_'):
+                    check = 1
+                if attrs['TE'] >= 3 or attrs['MS'] >= 3:
+                    seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
+            if check == 0 and 1 in seq_tensor:
+                alt_dataset[trx] = {'mapped_seq': map_seq(seq),
+                                    'mapped_cds': seq_tensor,
+                                    'gene_name': ensembl_trx[trx]['gene_name'],
+                                    "biotype": biotype,
+                                    'tsl': tsl}
+        return alt_dataset
+    
+    def sorfs_dataset(self, ensembl_trx):
+        excel_file = pd.read_excel(self.sorfs, index_col=0)
+        sorfs = excel_file.T.to_dict()
+        sorfs = {x:y for x,y in sorfs.items()}
+        sorfs_dataset = dict()
+        for orf, attrs in sorfs.items():
+            trx = attrs['transcript']
+            if trx not in ensembl_trx:
+                continue
+            if attrs['CDS_overlap'] == 1:
+                continue
+            seq = ensembl_trx[trx]['sequence']
+            if trx in sorfs_dataset:
+                seq_tensor = sorfs_dataset[trx]['mapped_cds']
+            else:
+                seq_tensor = torch.zeros(1, len(seq)).view(-1)
+            orf_len = attrs['orf_length']
             orfs_loc = find_orfs(seq)
-            if biotype in ["pseudogene", "ncRNA", "protein_coding"]:
-                for orf, attrs in orfs.items():
-                    start, stop = attrs['start'], attrs['stop']
-                    if (start, stop) in orfs_loc:
-                        if attrs['TE'] >= 2 or attrs['MS'] >= 2:
-                            seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
-                dataset[trx] = {'mapped_seq': map_seq(seq),
-                                'mapped_cds': seq_tensor,
-                                'gene_name': ensembl_trx[trx]['gene_name'],
-                                "biotype": biotype}
-        return dataset
+            for start, stop in orfs_loc:
+                length = stop - start
+                if length == orf_len:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+            sorfs_dataset[trx] = {'mapped_seq': map_seq(seq),
+                                  'mapped_cds': seq_tensor}
+        return sorfs_dataset
 
     def split_dataset(self, dataset):
         split_dict = dict()
