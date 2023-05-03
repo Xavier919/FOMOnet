@@ -270,28 +270,6 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, alt_trx):
-        alt_dataset = dict()
-        for trx, orfs in trx_orfs.items():
-            if ensembl_trx[trx]['biotype'] != 'processed_transcript':
-                continue
-            if len(ensembl_trx[trx]['sequence']) > 30000:
-                continue
-            if trx not in [x[0] for x in alt_trx]:
-                continue
-            biotype = ensembl_trx[trx]['biotype']
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            seq_tensor = torch.zeros(1, seq_len).view(-1)
-            for orf, attrs in orfs.items():
-                if trx in [x[0] for x in alt_trx] and orf in [x[1] for x in alt_trx]:
-                    seq_tensor = map_cds(seq_tensor, attrs['start'], attrs['stop'], 1)
-            if 1 in seq_tensor:
-                alt_dataset[trx] = {'mapped_seq': map_seq(seq),
-                                    'mapped_cds': seq_tensor,
-                                    'gene_name': ensembl_trx[trx]['gene_name'],
-                                    "biotype": biotype}
-        return alt_dataset
-    
     def sorfs_dataset(self, ensembl_trx):
         excel_file = pd.read_excel(self.sorfs, index_col=0)
         sorfs = excel_file.T.to_dict()
@@ -318,24 +296,64 @@ class Data:
                                   'mapped_cds': seq_tensor}
         return sorfs_dataset
 
-    def split_dataset(self, dataset):
-        split_dict = dict()
-        trxps = [x for x in dataset.keys()]
-        random.seed(5)
-        random.shuffle(trxps)
-        splits = np.array_split(trxps, 5)
-        for idx, split in enumerate(splits):
-            for trx in split:
-                split_dict[trx] = idx
-        pickle.dump(split_dict, open('data/split_dict.pkl', 'wb'))
-        for split in set(list(split_dict.values())):
+    def get_bins(self, dataset, ensembl_trx, paralogs_path = 'data/paralogues.txt'):
+        gene_paralogs = dict()
+        with open(paralogs_path, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for n, row in enumerate(reader):
+                if n == 0:
+                    cols = row
+                    continue
+                line = dict(zip(cols, row))
+                gene = line['Gene name']
+                paralog = line['Human paralogue associated gene name']
+                if gene == paralog or paralog == '':
+                    continue
+                if gene not in gene_paralogs:
+                    gene_paralogs[gene] = [paralog]
+                elif paralog not in gene_paralogs[gene]:
+                    gene_paralogs[gene].append(paralog)
+                else:
+                    continue
 
-            X_train = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] != split]
-            y_train = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] != split]
+        grouping = []
+        for trx, attrs in tqdm(dataset.items()):
+            check = [x for x in grouping if trx in x]
+            if len(check) != 0:
+                continue
+            group = [trx]
+            gene = ensembl_trx[trx]['gene_name']
+            paralogs = ''
+            if gene in gene_paralogs:
+                paralogs = gene_paralogs[gene]
+            for trx_, attrs in dataset.items():
+                if ensembl_trx[trx_]['gene_name'] in paralogs and trx_ != trx:
+                    group.append(trx_)
+            grouping.append(group)
+
+        for trx in tqdm(dataset.keys()):
+            count = 0
+            for group in grouping:
+                if trx in group and count == 0:
+                    count += 1
+                elif trx in group and count != 0:
+                    group.remove(trx)
+        grouping = sorted(grouping, key=len, reverse=True)
+
+        bins = [[] for i in range(10)]
+        for lst in grouping:
+            idx = min(range(10), key=lambda i: len(bins[i]))
+            bins[idx].extend(lst)
+        return bins
+
+    def split_dataset(self, dataset, bins):
+        for idx, bin_ in enumerate(bins):
+            X_train = [y['mapped_seq'] for x,y in dataset.items() if x not in bin_]
+            y_train = [y['mapped_cds'] for x,y in dataset.items() if x not in bin_]
             train_split = (X_train,y_train)
-            pickle.dump(train_split, open(f'data/train_split{split}.pkl', 'wb'))
+            pickle.dump(train_split, open(f'data/train_split{idx}.pkl', 'wb'))
 
-            X_test = [y['mapped_seq'] for x,y in dataset.items() if split_dict[x] == split]
-            y_test = [y['mapped_cds'] for x,y in dataset.items() if split_dict[x] == split]
+            X_test = [y['mapped_seq'] for x,y in dataset.items() if x in bin_]
+            y_test = [y['mapped_cds'] for x,y in dataset.items() if x in bin_]
             test_split = (X_test,y_test)
-            pickle.dump(test_split, open(f'data/test_split{split}.pkl', 'wb'))
+            pickle.dump(test_split, open(f'data/test_split{idx}.pkl', 'wb'))
