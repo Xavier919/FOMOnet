@@ -7,7 +7,7 @@ from torchmetrics import PrecisionRecallCurve
 from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
-from tqdm.notebook import tqdm
+#from tqdm.notebook import tqdm
 from utils import *
 
 def bin_pred(output, thresh):
@@ -70,7 +70,7 @@ def roc_curve(preds, target):
 def get_preds(model, X_test, y_test):
     preds = []
     model.eval()
-    for X, y in tqdm(list(zip(X_test, y_test))):
+    for X, y in list(zip(X_test, y_test)):
         X_ = torch.cat([torch.zeros(2500),X,torch.zeros(2500)],dim=0)
         y_ = torch.cat([torch.zeros(2500),y,torch.zeros(2500)],dim=0)
         X_one_hot = one_hot(X_).T
@@ -82,7 +82,7 @@ def get_preds(model, X_test, y_test):
 def get_report(preds, ensembl_trx, inverted_ensembl_trx):
     report = dict()
     inverted_ensembl_trx = {y['sequence']:x for x,y in ensembl_trx.items()}
-    for seq, target, out in tqdm(preds):
+    for seq, target, out in preds:
         out, target, sequence = crop_zeros(seq, out), crop_zeros(seq, target), crop_zeros(seq, seq)
         out, target, sequence = torch.tensor(out), torch.tensor(target), torch.tensor(sequence)
         preds = bin_pred(out, 0.5)
