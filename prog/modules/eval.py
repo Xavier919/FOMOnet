@@ -25,4 +25,4 @@ if __name__ == "__main__":
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
 
     preds = get_preds(fomonet, X_test, y_test)
-    pickle.dump(preds, open(f'data/preds_{args.model}.pkl', 'wb'))
+    pickle.dump(preds, open(f'preds_{args.model}.pkl', 'wb'))
