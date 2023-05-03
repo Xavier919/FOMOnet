@@ -14,6 +14,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('data')
 parser.add_argument('model')
+parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -25,4 +26,4 @@ if __name__ == "__main__":
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
 
     preds = get_preds(fomonet, X_test, y_test)
-    pickle.dump(preds, open(f'preds_{args.model}.pkl', 'wb'))
+    pickle.dump(preds, open(f'preds_{args.tag}.pkl', 'wb'))

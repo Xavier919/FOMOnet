@@ -270,6 +270,23 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
+    def pseudo_dataset(self, ensembl_trx, trx_orfs):
+        dataset = dict()
+        for trx, orfs in tqdm(trx_orfs.items()):
+            biotype = ensembl_trx[trx]['biotype']
+            if biotype != 'pseudogene':
+                continue
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
+            seq_tensor = torch.zeros(1, seq_len).view(-1)
+            for orf, attrs in orfs.items():
+                start, stop = attrs['start'], attrs['stop']
+                if attrs['TE'] >= 2 or attrs['MS'] >= 2:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+            dataset[trx] = {'mapped_seq': map_seq(seq),
+                            'mapped_cds': seq_tensor,
+                            'gene_name': ensembl_trx[trx]['gene_name']}
+        return dataset
+    
     def sorfs_dataset(self, ensembl_trx):
         excel_file = pd.read_excel(self.sorfs, index_col=0)
         sorfs = excel_file.T.to_dict()
