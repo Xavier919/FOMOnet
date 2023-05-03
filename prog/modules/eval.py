@@ -21,8 +21,8 @@ if __name__ == "__main__":
     X_test, y_test = pickle.load(open(args.data, 'rb'))
 
     #instantiate model
-    fomonet = FOMOnet(num_channels=4).cuda()
-    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
+    fomonet = FOMOnet(num_channels=4)
+    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
 
     preds = get_preds(fomonet, X_test, y_test)
     pickle.dump(preds, open(f'data/preds_{args.model}.pkl', 'wb'))
