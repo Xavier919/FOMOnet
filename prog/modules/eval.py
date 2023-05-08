@@ -27,3 +27,5 @@ if __name__ == "__main__":
 
     preds = get_preds(fomonet, X_test, y_test)
     pickle.dump(preds, open(f'preds_{args.tag}.pkl', 'wb'))
+
+    

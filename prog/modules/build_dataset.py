@@ -163,6 +163,7 @@ class Data:
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
+                    'chr': line['chr'],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -347,7 +348,8 @@ class Data:
                 if ensembl_trx[trx_]['gene_name'] in paralogs and trx_ != trx:
                     group.append(trx_)
             grouping.append(group)
-
+        print(len([x for x in grouping if len(x) != 1]))
+        print(len([x for x in grouping if len(x) == 1]))
         for trx in tqdm(dataset.keys()):
             count = 0
             for group in grouping:

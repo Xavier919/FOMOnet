@@ -71,7 +71,7 @@ def find_orfs(seq):
                 if stop - start < 90 or any(i > start for i in stops[idx+1:]):
                     continue
                 else:
-                    ORFs.append((start, stop))
+                    ORFs.append((start, stop, frame+1))
                     break
     return ORFs
 

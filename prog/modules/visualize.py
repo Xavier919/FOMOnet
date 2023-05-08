@@ -20,6 +20,7 @@ def map_preds(report, trx_orfs, ensembl_trx, n_display=5):
         n+=1
         print(trx), print('recall:', info['recall']), print('iou:', info['iou'])
         print('biotype:', ensembl_trx[trx]['biotype'])
+        print('gene:', ensembl_trx[trx]['gene_name'])
         if trx in trx_orfs:
             orfs = dict()
             for orf, attrs in trx_orfs[trx].items():
