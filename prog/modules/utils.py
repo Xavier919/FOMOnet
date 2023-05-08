@@ -90,19 +90,3 @@ def find_cds(y):
     if len(in_CDS) != 0:
         coordinates = (in_CDS[0], in_CDS[-1]+1)
     return coordinates
-
-def read_fasta(filename):
-    if filename.endswith(".gz"):
-        fp = gzip.open(filename, "rt")
-    else:
-        fp = open(filename, "r")
-    name, seq = None, []
-    for line in fp:
-        line = line.rstrip()
-        if line.startswith(">"):
-            if name: yield (name, "".join(seq))
-            name, seq = line, []
-        else:
-            seq.append(line)
-    if name: yield (name, "".join(seq))
-    fp.close()

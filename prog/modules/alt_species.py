@@ -1,5 +1,6 @@
 from tqdm import tqdm_notebook as tqdm
 import torch
+import gzip
 from modules.utils import *
 
 class Data:
@@ -8,9 +9,26 @@ class Data:
         self.alt_trx = alt_trx
         self.alt_cds = alt_cds
     
+    def read_fasta(self, filename):
+        if filename.endswith(".gz"):
+            fp = gzip.open(filename, "rt")
+        else:
+            fp = open(filename, "r")
+        name, seq = None, []
+        for line in fp:
+            line = line.rstrip()
+            if line.startswith(">"):
+                if name: yield (name, "".join(seq))
+                name, seq = line, []
+            else:
+                seq.append(line)
+        if name: yield (name, "".join(seq))
+        fp.close()
+
+
     def get_trx(self):
         trx_dict = dict()
-        for name, seq in tqdm(self.alt_trx):
+        for name, seq in tqdm(self.read_fasta(self.alt_trx)):
             trx = name.split('>')[1]
             seq = str(seq)
             trx_dict[trx] = {'seq':seq}

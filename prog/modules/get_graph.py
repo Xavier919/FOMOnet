@@ -5,8 +5,6 @@ from torch import nn
 import pickle
 import numpy as np
 #project specific imports
-from utils import *
-from evaluate import *
 import argparse
 from matplotlib import pyplot as plt
 from torchmetrics import PrecisionRecallCurve
@@ -34,7 +32,7 @@ if __name__ == "__main__":
     precision, recall, _ = pr_curve(preds, target)
     auc_pr = auc(recall, precision)
     plt.plot(recall, precision, color = 'black')
-    plt.ylim(0, 1), plt.xlim(0, 1)
+    plt.ylim(0, 1.2), plt.xlim(0, 1)
     plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
     plt.legend(['PR AUC: {}'.format(round(auc_pr, 3))])
     plt.savefig(f'pr_curve{args.tag}.svg')
@@ -45,7 +43,7 @@ if __name__ == "__main__":
     fpr, tpr, _ = metrics.roc_curve(target, preds)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, color = 'black')
-    plt.ylim(0, 1), plt.xlim(0, 1)
+    plt.ylim(0, 1.2), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
     plt.savefig(f'roc_curve{args.tag}.svg')
