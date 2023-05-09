@@ -32,22 +32,19 @@ if __name__ == "__main__":
     precision, recall, _ = pr_curve(preds, target)
     auc_pr = auc(recall, precision)
     plt.plot(recall, precision, color = 'black')
-    plt.ylim(0, 1.2), plt.xlim(0, 1)
+    plt.ylim(0, 1), plt.xlim(0, 1)
     plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
     plt.legend(['PR AUC: {}'.format(round(auc_pr, 3))])
     plt.savefig(f'pr_curve{args.tag}.svg')
-    plt.show()
+    plt.clf()
 
     preds = cat(preds_).detach().numpy()
     target = cat(target_).long().detach().numpy()
     fpr, tpr, _ = metrics.roc_curve(target, preds)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, color = 'black')
-    plt.ylim(0, 1.2), plt.xlim(0, 1)
+    plt.ylim(0, 1), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
     plt.savefig(f'roc_curve{args.tag}.svg')
-    plt.show()
-
-
-    
+    plt.clf()
