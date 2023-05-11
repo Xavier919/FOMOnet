@@ -8,8 +8,8 @@ from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
-#from tqdm.notebook import tqdm
-from utils import *
+from tqdm.notebook import tqdm
+from modules.utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -95,7 +95,7 @@ def get_preds(model, X_test, y_test):
 def get_report(preds, ensembl_trx, inverted_ensembl_trx):
     report = dict()
     inverted_ensembl_trx = {y['sequence']:x for x,y in ensembl_trx.items()}
-    for seq, target, out in preds:
+    for seq, target, out in tqdm(preds):
         out, target, sequence = crop_zeros(seq, out), crop_zeros(seq, target), crop_zeros(seq, seq)
         out, target, sequence = torch.tensor(out), torch.tensor(target), torch.tensor(sequence)
         preds = bin_pred(out, 0.5)
