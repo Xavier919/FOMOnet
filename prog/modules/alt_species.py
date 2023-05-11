@@ -53,7 +53,7 @@ class Data:
             if cds_seq != 'Sequence unavailable':
                 start, stop = find_coordinates(cds_seq, trx_seq)
                 seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor:
+            if 0 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(trx_seq),
                                 'mapped_cds': seq_tensor}
         return dataset
