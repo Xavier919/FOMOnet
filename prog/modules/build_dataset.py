@@ -10,12 +10,13 @@ import torch
 from sklearn.model_selection import train_test_split
 import random
 from matplotlib import pyplot as plt
+from tqdm.notebook import tqdm
 import random
 import pandas as pd
 from modules.utils import *
 
 class Data:
-    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
+    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs, unique_pept):
         
         self.biotype_grouping = {
             'protein_coding': 'protein_coding',
@@ -95,6 +96,7 @@ class Data:
         self.ensembl95_trxps = pyfaidx.Fasta(trx_fasta)
         self.OP_prot_MS, self.OP_trx_altprot = self.get_altprot_info()
         self.sorfs = sorfs
+        self.unique_pept = unique_pept
 
     def get_op_trx(self):
         op_trx_accession = set()
@@ -146,7 +148,7 @@ class Data:
         ensembl_trx = dict()
         with open(self.Ens_trx, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
-            for n, row in enumerate(reader):
+            for n, row in tqdm(enumerate(reader)):
                 if n==0:
                     cols = row
                     continue
@@ -163,7 +165,6 @@ class Data:
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
-                    'chr': line['chr'],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -229,7 +230,15 @@ class Data:
             if trx not in trx_orfs:
                 altprots = dict()
                 trx_orfs[trx] = altprots
-        return trx_orfs 
+        
+        with open(self.unique_pept, 'r') as csv_:
+            for line in csv_:
+                ls = line.split(',')
+                p_acc, tx_acc, uniq_pep = ls[1], ls[2], ls[7]
+                if tx_acc in trx_orfs:
+                    if p_acc in trx_orfs[tx_acc]:
+                        trx_orfs[tx_acc][p_acc]['unique_pept'] = int(uniq_pep)
+        return trx_orfs
 
     def get_rnd_trx(self, ensembl_trx, trx_orfs):
         gene_trxps = dict()
@@ -271,22 +280,31 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def pseudo_dataset(self, ensembl_trx, trx_orfs):
-        dataset = dict()
+    def alt_dataset(self, ensembl_trx, trx_orfs):
+        candidate_trx = []
         for trx, orfs in tqdm(trx_orfs.items()):
+            for orf, attrs in orfs.items():
+                if orf.startswith('ENSP'):
+                    continue
+                elif (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
+                    candidate_trx.append(trx)
+        candidate_trx = set(candidate_trx)
+        alt_dataset = dict()
+        for trx in tqdm(candidate_trx):
             biotype = ensembl_trx[trx]['biotype']
-            if biotype != 'pseudogene':
-                continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
-            for orf, attrs in orfs.items():
+            for orf, attrs in trx_orfs[trx].items():
                 start, stop = attrs['start'], attrs['stop']
-                if attrs['TE'] >= 2 or attrs['MS'] >= 2:
+                if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            dataset[trx] = {'mapped_seq': map_seq(seq),
-                            'mapped_cds': seq_tensor,
-                            'gene_name': ensembl_trx[trx]['gene_name']}
-        return dataset
+                elif (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+            alt_dataset[trx] = {'mapped_seq': map_seq(seq),
+                                'mapped_cds': seq_tensor,
+                                'gene_name': ensembl_trx[trx]['gene_name'],
+                                'biotype': biotype}
+        return alt_dataset
     
     def sorfs_dataset(self, ensembl_trx):
         excel_file = pd.read_excel(self.sorfs, index_col=0)
