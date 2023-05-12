@@ -35,3 +35,15 @@ def map_preds(report, trx_orfs, ensembl_trx, n_display=5):
         map_pred(info['out'], info['mapped_cds'])
         if n==n_display:
             break
+
+def map_preds_os(report, dataset, n_display=5):
+    n=0
+    trxps = [x for x in dataset.keys()]
+    for trx, info in report.items():
+        n+=1
+        trx_ = trxps[trx]
+        print(trx_), print('recall:', info['recall']), print('iou:', info['iou'])
+        print(find_orfs(map_back(dataset[trx_]['mapped_seq'])))
+        map_pred(info['out'], info['mapped_cds'])
+        if n==n_display:
+            break

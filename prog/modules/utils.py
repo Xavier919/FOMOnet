@@ -73,6 +73,7 @@ def find_orfs(seq):
                 else:
                     ORFs.append((start, stop, frame+1))
                     break
+    ORFs = sorted(ORFs, key=lambda x: x[0])
     return ORFs
 
 def find_coordinates(orf_seq, trx_seq):
