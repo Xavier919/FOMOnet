@@ -81,14 +81,15 @@ if __name__ == "__main__":
     for bin_ in args.bins:
         preds = [y['out'] for x,y in reports.items() if x in bin_]
         target = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
-        preds = cat(preds_)
-        target = cat(target_).long()
+        preds = cat(preds)
+        target = cat(target).long()
         pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
+        precision, recall, _ = pr_curve(preds, target)
         auc_pr = auc(recall, precision)
         plt.scatter(fpr, tpr, color = 'grey')
         
-    preds = cat(preds_)
-    target = cat(target_).long()
+    preds = cat(preds)
+    target = cat(target).long()
     pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
     precision, recall, _ = pr_curve(preds, target)
     auc_pr = auc(recall, precision)
