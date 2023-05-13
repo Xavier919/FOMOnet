@@ -23,6 +23,7 @@ args = parser.parse_args()
 if __name__ == "__main__":
 
     reports = pickle.load(open(args.reports, 'rb'))
+    bins = pickle.load(open(args.bins, 'rb'))
 
     #preds_ = [x['out'] for x in reports.values()]
     #target_ = [x['mapped_cds'] for x in reports.values()]
@@ -52,8 +53,7 @@ if __name__ == "__main__":
 
 
 
-    for bin_ in args.bins:
-        bin_ = [x for x in bin_ if x in reports]
+    for bin_ in bins:
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
         if len(preds) == 0 or len(target_) == 0:
@@ -78,8 +78,7 @@ if __name__ == "__main__":
     plt.clf()
 
 
-    for bin_ in args.bins:
-        bin_ = [x for x in bin_ if x in reports]
+    for bin_ in bins:
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
         if len(preds) == 0 or len(target_) == 0:
