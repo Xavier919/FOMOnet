@@ -60,6 +60,7 @@ if __name__ == "__main__":
         fpr, tpr, _ = metrics.roc_curve(target, preds)
         roc_auc = auc(fpr, tpr)
         plt.scatter(fpr, tpr, color = 'lime')
+        plt.ylim(0.9, 1.02), plt.xlim(0, 1)
     preds_ = [x['out'] for x in reports.values()]
     target_ = [x['mapped_cds'] for x in reports.values()]
     preds = cat(preds_).detach().numpy()
