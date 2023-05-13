@@ -53,6 +53,7 @@ if __name__ == "__main__":
 
 
     for bin_ in args.bins:
+        bin_ = [x for x in bin_ if x in reports]
         preds_ = [reports[x]['out'] for x in bin_ if x in reports]
         target_ = [reports[x]['mapped_cds'] for x in bin_ if x in reports]
         preds = cat(preds_).detach().numpy()
@@ -76,6 +77,7 @@ if __name__ == "__main__":
 
 
     for bin_ in args.bins:
+        bin_ = [x for x in bin_ if x in reports]
         preds_ = [reports[x]['out'] for x in bin_ if x in reports]
         target_ = [reports[x]['mapped_cds'] for x in bin_ if x in reports]
         preds = cat(preds_)
