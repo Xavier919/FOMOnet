@@ -74,7 +74,7 @@ if __name__ == "__main__":
     plt.ylim(0.9, 1.02), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
-    plt.savefig(f'roc_curve{args.tag}.svg')
+    plt.savefig(f'roc_curve{args.tag}.png')
     plt.clf()
 
 
@@ -100,5 +100,5 @@ if __name__ == "__main__":
     plt.ylim(0.9, 1.02), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['PR AUC: {}'.format(round(roc_auc, 3))])
-    plt.savefig(f'PR_curve{args.tag}.svg')
+    plt.savefig(f'PR_curve{args.tag}.png')
     plt.clf()
