@@ -73,3 +73,27 @@ if __name__ == "__main__":
     plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
     plt.savefig(f'roc_curve{args.tag}.svg')
     plt.clf()
+
+
+    for bin_ in args.bins:
+        preds_ = [reports[x]['out'] for x in bin_ if x in reports]
+        target_ = [reports[x]['mapped_cds'] for x in bin_ if x in reports]
+        preds = cat(preds_)
+        target = cat(target_).long()
+        pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
+        precision, recall, _ = pr_curve(preds, target)
+        auc_pr = auc(recall, precision)
+        plt.scatter(recall, precision, color = 'lime')
+        plt.ylim(0.9, 1.02), plt.xlim(0, 1)
+    preds_ = [x['out'] for x in reports.values()]
+    target_ = [x['mapped_cds'] for x in reports.values()]
+    preds = cat(preds_)
+    target = cat(target_).long()
+    precision, recall, _ = pr_curve(preds, target)
+    auc_pr = auc(recall, precision)
+    plt.plot(fpr, tpr, color = 'lime')
+    plt.ylim(0.9, 1.02), plt.xlim(0, 1)
+    plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
+    plt.legend(['PR AUC: {}'.format(round(roc_auc, 3))])
+    plt.savefig(f'PR_curve{args.tag}.svg')
+    plt.clf()
