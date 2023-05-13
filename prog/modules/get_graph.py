@@ -56,7 +56,7 @@ if __name__ == "__main__":
     for bin_ in bins:
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
-        if len(preds) == 0 or len(target_) == 0:
+        if len(preds_) == 0 or len(target_) == 0:
             continue
         preds = cat(preds_).detach().numpy()
         target = cat(target_).long().detach().numpy()
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     for bin_ in bins:
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
-        if len(preds) == 0 or len(target_) == 0:
+        if len(preds_) == 0 or len(target_) == 0:
             continue
         preds = cat(preds_)
         target = cat(target_).long()
