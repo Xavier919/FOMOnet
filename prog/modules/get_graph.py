@@ -16,6 +16,7 @@ from sklearn import metrics
 
 parser = argparse.ArgumentParser()
 parser.add_argument('reports')
+parser.add_argument('bins')
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     precision, recall, _ = pr_curve(preds, target)
     auc_pr = auc(recall, precision)
     plt.plot(recall, precision, color = 'lime')
-    plt.ylim(0.9, 1.05), plt.xlim(0, 1)
+    plt.ylim(0.9, 1.02), plt.xlim(0, 1)
     plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
     plt.legend(['PR AUC: {}'.format(round(auc_pr, 3))])
     plt.savefig(f'pr_curve{args.tag}.svg')
@@ -43,9 +44,31 @@ if __name__ == "__main__":
     fpr, tpr, _ = metrics.roc_curve(target, preds)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, color = 'lime')
-    plt.ylim(0.9, 1.05), plt.xlim(0, 1)
+    plt.ylim(0.9, 1.02), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
     plt.savefig(f'roc_curve{args.tag}.svg')
     plt.clf()
 
+
+
+    for idx, bin_ in args.bins:
+        preds = [reports[x]['out'] for x in bin_ if x in reports]
+        target = [reports[x]['mapped_cds'] for x in bin_ if x in reports]
+        preds = cat(preds_).detach().numpy()
+        target = cat(target_).long().detach().numpy()
+        fpr, tpr, _ = metrics.roc_curve(target, preds)
+        roc_auc = auc(fpr, tpr)
+        plt.scatter(fpr, tpr, color = 'lime')
+    preds_ = [x['out'] for x in reports.values()]
+    target_ = [x['mapped_cds'] for x in reports.values()]
+    preds = cat(preds_).detach().numpy()
+    target = cat(target_).long().detach().numpy()
+    fpr, tpr, _ = metrics.roc_curve(target, preds)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, color = 'lime')
+    plt.ylim(0.9, 1.02), plt.xlim(0, 1)
+    plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
+    plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
+    plt.savefig(f'roc_curve{args.tag}.svg')
+    plt.clf()
