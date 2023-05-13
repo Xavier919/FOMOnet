@@ -56,6 +56,8 @@ if __name__ == "__main__":
         bin_ = [x for x in bin_ if x in reports]
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
+        if len(preds) == 0 or len(target_) == 0:
+            continue
         preds = cat(preds_).detach().numpy()
         target = cat(target_).long().detach().numpy()
         fpr, tpr, _ = metrics.roc_curve(target, preds)
@@ -80,6 +82,8 @@ if __name__ == "__main__":
         bin_ = [x for x in bin_ if x in reports]
         preds_ = [y['out'] for x,y in reports.items() if x in bin_]
         target_ = [y['mapped_cds'] for x,y in reports.items() if x in bin_]
+        if len(preds) == 0 or len(target_) == 0:
+            continue
         preds = cat(preds_)
         target = cat(target_).long()
         pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
