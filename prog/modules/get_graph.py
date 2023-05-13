@@ -62,7 +62,7 @@ if __name__ == "__main__":
         target = cat(target_).long().detach().numpy()
         fpr, tpr, _ = metrics.roc_curve(target, preds)
         roc_auc = auc(fpr, tpr)
-        plt.scatter(fpr, tpr, color = 'grey', s=0.001, alpha=0.1)
+        plt.scatter(fpr, tpr, color = 'grey', s=0.001, alpha=0.05)
         plt.ylim(0.9, 1.01), plt.xlim(0, 1)
     preds_ = [x['out'] for x in reports.values()]
     target_ = [x['mapped_cds'] for x in reports.values()]
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
         precision, recall, _ = pr_curve(preds, target)
         auc_pr = auc(recall, precision)
-        plt.scatter(recall, precision, color = 'grey', s=0.001, alpha=0.1)
+        plt.scatter(recall, precision, color = 'grey', s=0.001, alpha=0.05)
         plt.ylim(0.9, 1.01), plt.xlim(0, 1)
     preds_ = [x['out'] for x in reports.values()]
     target_ = [x['mapped_cds'] for x in reports.values()]
