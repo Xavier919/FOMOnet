@@ -283,11 +283,18 @@ class Data:
     def alt_dataset(self, ensembl_trx, trx_orfs):
         candidate_trx = []
         for trx, orfs in tqdm(trx_orfs.items()):
+            ensp_coord = -1, -1
+            for orf, attrs in orfs.items():
+                if orf.startswith('ENSP'):
+                    ensp_coord = attrs['start'], attrs['stop']
             for orf, attrs in orfs.items():
                 if orf.startswith('ENSP'):
                     continue
-                elif (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
+                if attrs['start'] in range(ensp_coord[0], ensp_coord[1]) or attrs['stop'] in range(ensp_coord[0], ensp_coord[1]):
+                    continue
+                if (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
                     candidate_trx.append(trx)
+
         candidate_trx = set(candidate_trx)
         alt_dataset = dict()
         for trx in tqdm(candidate_trx):
@@ -297,7 +304,7 @@ class Data:
             for orf, attrs in trx_orfs[trx].items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+                    continue
                 elif (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             alt_dataset[trx] = {'mapped_seq': map_seq(seq),

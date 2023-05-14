@@ -136,7 +136,7 @@ class FOMOnet(nn.Module):
 
         block = nn.Sequential(
             nn.MaxPool1d(kernel_size=2),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
@@ -153,7 +153,7 @@ class FOMOnet(nn.Module):
 
         block = nn.Sequential(
             nn.MaxPool1d(kernel_size=2),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
@@ -168,7 +168,7 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=0.3)
+            nn.Dropout(p=0.2)
         )
         return block
 
@@ -180,12 +180,12 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
             nn.Conv1d(out_channels, out_channels, kernel_size=kernel_size, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
         )
         return block
     
@@ -197,7 +197,7 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
         )
         return block
 
@@ -209,12 +209,12 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, mid_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(mid_channels),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
             nn.Conv1d(mid_channels, mid_channels, kernel_size=kernel_size, groups=mid_channels, padding='same'),
             nn.Conv1d(mid_channels, mid_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(mid_channels),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.2),
             nn.Conv1d(mid_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
