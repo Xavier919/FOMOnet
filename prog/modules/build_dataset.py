@@ -247,7 +247,7 @@ class Data:
                 continue
             if ensembl_trx[trx]["tsl"] != 'tsl1':
                 continue
-            if len(ensembl_trx[trx]["sequence"]) > 30000:
+            if len(ensembl_trx[trx]["sequence"]) > 15000:
                 continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
@@ -279,116 +279,6 @@ class Data:
                                 'mapped_cds': seq_tensor,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
-    
-    def alt_dataset(self, ensembl_trx, trx_orfs):
-        candidate_trx = []
-        for trx, orfs in tqdm(trx_orfs.items()):
-            ensp_coord = -1, -1
-            for orf, attrs in orfs.items():
-                if orf.startswith('ENSP'):
-                    ensp_coord = attrs['start'], attrs['stop']
-            for orf, attrs in orfs.items():
-                if orf.startswith('ENSP'):
-                    continue
-                if attrs['start'] in range(ensp_coord[0], ensp_coord[1]) or attrs['stop'] in range(ensp_coord[0], ensp_coord[1]):
-                    continue
-                if (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
-                    candidate_trx.append(trx)
-
-        candidate_trx = set(candidate_trx)
-        alt_dataset = dict()
-        for trx in tqdm(candidate_trx):
-            biotype = ensembl_trx[trx]['biotype']
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            seq_tensor = torch.zeros(1, seq_len).view(-1)
-            for orf, attrs in trx_orfs[trx].items():
-                start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
-                    continue
-                elif (attrs['unique_pept'] >= 2 and attrs['MS'] >= 3) or attrs['TE'] >= 3:
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            alt_dataset[trx] = {'mapped_seq': map_seq(seq),
-                                'mapped_cds': seq_tensor,
-                                'gene_name': ensembl_trx[trx]['gene_name'],
-                                'biotype': biotype}
-        return alt_dataset
-    
-    def sorfs_dataset(self, ensembl_trx):
-        excel_file = pd.read_excel(self.sorfs, index_col=0)
-        sorfs = excel_file.T.to_dict()
-        sorfs = {x:y for x,y in sorfs.items()}
-        sorfs_dataset = dict()
-        for orf, attrs in sorfs.items():
-            trx = attrs['transcript']
-            if trx not in ensembl_trx:
-                continue
-            if attrs['CDS_overlap'] == 1:
-                continue
-            seq = ensembl_trx[trx]['sequence']
-            if trx in sorfs_dataset:
-                seq_tensor = sorfs_dataset[trx]['mapped_cds']
-            else:
-                seq_tensor = torch.zeros(1, len(seq)).view(-1)
-            orf_len = attrs['orf_length']
-            orfs_loc = find_orfs(seq)
-            for start, stop in orfs_loc:
-                length = stop - start
-                if length == orf_len:
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            sorfs_dataset[trx] = {'mapped_seq': map_seq(seq),
-                                  'mapped_cds': seq_tensor}
-        return sorfs_dataset
-
-    def get_bins(self, dataset, ensembl_trx, paralogs_path = 'data/paralogues.txt'):
-        gene_paralogs = dict()
-        with open(paralogs_path, 'r') as f:
-            reader = csv.reader(f, delimiter='\t')
-            for n, row in enumerate(reader):
-                if n == 0:
-                    cols = row
-                    continue
-                line = dict(zip(cols, row))
-                gene = line['Gene name']
-                paralog = line['Human paralogue associated gene name']
-                if gene == paralog or paralog == '':
-                    continue
-                if gene not in gene_paralogs:
-                    gene_paralogs[gene] = [paralog]
-                elif paralog not in gene_paralogs[gene]:
-                    gene_paralogs[gene].append(paralog)
-                else:
-                    continue
-
-        grouping = []
-        for trx, attrs in tqdm(dataset.items()):
-            check = [x for x in grouping if trx in x]
-            if len(check) != 0:
-                continue
-            group = [trx]
-            gene = ensembl_trx[trx]['gene_name']
-            paralogs = ''
-            if gene in gene_paralogs:
-                paralogs = gene_paralogs[gene]
-            for trx_, attrs in dataset.items():
-                if ensembl_trx[trx_]['gene_name'] in paralogs and trx_ != trx:
-                    group.append(trx_)
-            grouping.append(group)
-        print(len([x for x in grouping if len(x) != 1]))
-        print(len([x for x in grouping if len(x) == 1]))
-        for trx in tqdm(dataset.keys()):
-            count = 0
-            for group in grouping:
-                if trx in group and count == 0:
-                    count += 1
-                elif trx in group and count != 0:
-                    group.remove(trx)
-        grouping = sorted(grouping, key=len, reverse=True)
-
-        bins = [[] for i in range(10)]
-        for lst in grouping:
-            idx = min(range(10), key=lambda i: len(bins[i]))
-            bins[idx].extend(lst)
-        return bins
 
     def split_dataset(self, dataset, bins):
         for idx, bin_ in enumerate(bins):

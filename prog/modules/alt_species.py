@@ -54,7 +54,8 @@ class Data:
                 start, stop = find_coordinates(cds_seq, trx_seq)
                 seq_tensor = map_cds(seq_tensor, start, stop, 1)
             trx_coverage = torch.count_nonzero(seq_tensor)/seq_len
-            if trx_coverage > 0.9:
+            cds_len = torch.count_nonzero(seq_tensor)
+            if trx_coverage > 0.9 or cds_len > 500:
                 continue
             if 0 in seq_tensor and 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(trx_seq),

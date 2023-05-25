@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.metrics import f1_score
 from matplotlib import pyplot as plt
 from torch import cat
 from sklearn import metrics
@@ -8,8 +7,8 @@ from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
-#from tqdm.notebook import tqdm
-from utils import *
+from tqdm.notebook import tqdm
+from modules.utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -88,20 +87,22 @@ def get_preds(model, X_test, y_test):
         y_ = torch.cat([torch.zeros(5000),y,torch.zeros(5000)],dim=0)
         X_one_hot = one_hot(X_).T
         outputs = model(X_one_hot).view(-1)
-        #torch.cuda.empty_cache()
         preds.append((X_.cpu().detach().numpy(), y_.cpu().detach().numpy(), outputs.cpu().detach().numpy()))
     return preds
 
-def get_report(preds, ensembl_trx, inverted_ensembl_trx):
+def get_report(preds, bins, bin):
     report = dict()
-    inverted_ensembl_trx = {y['sequence']:x for x,y in ensembl_trx.items()}
-    for seq, target, out in tqdm(preds):
+    trxps = bins[bin]
+    for idx, attrs in tqdm(enumerate(preds)):
+        trx = trxps[idx]
+        seq, target, out = attrs[0], attrs[1], attrs[2]
         out, target, sequence = crop_zeros(seq, out), crop_zeros(seq, target), crop_zeros(seq, seq)
         out, target, sequence = torch.tensor(out), torch.tensor(target), torch.tensor(sequence)
+        if len(sequence) >= 15000:
+            continue
         preds = bin_pred(out, 0.5)
         recall = recall_score(target, preds)
         iou = iou_score(target, preds)
-        trx = inverted_ensembl_trx[map_back(sequence)]
         report[trx] = {'out': out,
                         'mapped_seq':sequence,
                         'mapped_cds': target,
