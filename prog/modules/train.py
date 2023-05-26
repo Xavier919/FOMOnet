@@ -76,6 +76,7 @@ if __name__ == "__main__":
                 torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(losses)}')
         fomonet.eval()
+        test_losses = []
         for batch in test_loader:
             X = batch[0].view(len(batch[0]),1,-1).cuda()
             y = batch[1].view(len(batch[1]),-1).cuda()
@@ -84,6 +85,8 @@ if __name__ == "__main__":
             test_loss = get_loss(outputs, X, y, loss_function)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
+            test_losses.append(test_loss)
+        print(f'{epoch}_{np.mean(test_losses)}')
 
     writer.flush()
     test_writer.flush()
