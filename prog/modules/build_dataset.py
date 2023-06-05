@@ -272,9 +272,9 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             #if trx not in selected_trxps:
             #    continue
-            if ensembl_trx[trx]['biotype'] != 'protein_coding':
-                continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
+            if ensembl_trx[trx]['biotype'] != 'protein_coding' or seq_len > 15000:
+                continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
