@@ -267,10 +267,12 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
-        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            if trx not in selected_trxps:
+            #if trx not in selected_trxps:
+            #    continue
+            if ensembl_trx[trx]['biotype'] != 'protein_coding':
                 continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)

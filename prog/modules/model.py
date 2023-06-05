@@ -211,14 +211,15 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, mid_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(mid_channels),
-            #nn.Dropout(p=0.5),
+            nn.Dropout(p=0.5),
             nn.Conv1d(mid_channels, mid_channels, kernel_size=kernel_size, groups=mid_channels, padding='same'),
             nn.Conv1d(mid_channels, mid_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(mid_channels),
-            #nn.Dropout(p=0.5),
+            nn.Dropout(p=0.5),
             nn.Conv1d(mid_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
+            nn.Dropout(p=0.5),
         )
         return block
