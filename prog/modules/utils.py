@@ -1,5 +1,6 @@
 import torch
 import torch
+import random
 from torch.nn.utils.rnn import pad_sequence
 
 def pack_seqs(Xy):
@@ -39,7 +40,6 @@ def map_seq(seq):
     mapping = dict(zip("NATGC", range(0,5)))
     return torch.Tensor([mapping[nt] for nt in seq])
 
-
 def map_cds(seq_tensor, start, stop, num):
     ORF_loc = range(start, stop)
     for pos, _ in enumerate(seq_tensor):
@@ -57,10 +57,12 @@ def find_orfs(seq):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
     frames = [0,1,2]
     ORFs = []
+    #for start_codon in start_codons:
     for frame in frames:
         starts, stops = [], []
         for idx in list(range(frame, len(seq), 3)):
             codon = seq[idx:idx+3]
+            #if codon == start_codon
             if codon in start_codons: 
                 starts.append(idx)
             elif codon in stop_codons:
@@ -71,10 +73,47 @@ def find_orfs(seq):
                 if stop - start < 90 or any(i > start for i in stops[idx+1:]):
                     continue
                 else:
-                    ORFs.append((start, stop, frame+1))
+                    #ORFs.append((start, stop, frame+1))
+                    ORFs.append((start, stop))
                     break
     ORFs = sorted(ORFs, key=lambda x: x[0])
     return ORFs
+
+codon_table = {
+            'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
+            'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
+            'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+            'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+            'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
+            'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
+            'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+            'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+            'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+            'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
+            'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+            'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
+            'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W',
+            }
+
+def shuffle_seq(seq, start, stop):
+    start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
+    seq_copy_list = list(seq)  
+    random.shuffle(seq_copy_list) 
+    seq_copy_list[start:start+3] = list(start_codon)
+    seq_copy_list[stop-3:stop] = list(stop_codon)
+    syn_seq = ''.join(seq_copy_list) 
+    # Check and replace start and stop codons between start and stop
+    for i in range(start+3, stop-3, 3):
+        codon = syn_seq[i:i+3]
+        if codon in ['TAA', 'TAG', 'TGA', 'ATG']:
+            new_codons = [x for x in codon_table if x not in ['TAA', 'TAG', 'TGA', 'ATG']]
+            new_codon = random.choice(new_codons)
+            seq_copy_list[i:i+3] = list(new_codon)
+    syn_seq = ''.join(seq_copy_list)
+    return syn_seq
 
 def find_coordinates(orf_seq, trx_seq):
     length = len(orf_seq)
