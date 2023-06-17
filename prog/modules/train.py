@@ -46,8 +46,8 @@ if __name__ == "__main__":
     lr = args.lr
 
     #create DataLoader object for train & test data
-    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=8)
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=8)
+    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
+    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
 
     #instantiate model, optimizer and loss function
     fomonet = FOMOnet(num_channels=4).cuda()
