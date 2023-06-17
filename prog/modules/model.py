@@ -79,8 +79,6 @@ class FOMOnet(nn.Module):
 
         #bottleneck
         bottleneck_ = self.bottleneck(encode_block6)
-        residual_block_bot = self.res_encoder_bot(encode_block6)
-        bottleneck_ += residual_block_bot
 
         #middle
         decode_middle = self.conv_mid_decoder(bottleneck_)
