@@ -247,8 +247,8 @@ class Data:
         for trx, orfs in trx_orfs.items():
             if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
-            #if ensembl_trx[trx]["tsl"] != 'tsl1':
-            #    continue
+            if ensembl_trx[trx]["tsl"] != 'tsl1':
+                continue
             if len(ensembl_trx[trx]["sequence"]) > 15000:
                 continue
             for orf, attrs in orfs.items():
@@ -275,7 +275,9 @@ class Data:
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
+                start, stop, ORF_length = attrs['start'], attrs['stop'], attrs['ORF_length']
+                if ORF_length/seq_len >= 0.95 or start == 0 or stop == seq_len:
+                    continue
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
@@ -291,14 +293,16 @@ class Data:
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             if ensembl_trx[trx]['gene_name'] in selected_genes:
                 continue
-            if len(find_orfs(seq)) != len([x for x in orfs.keys()]):
+            if ensembl_trx[trx]['tsl'] != 'tsl1':
                 continue
-            if ensembl_trx[trx]['biotype'] not in ['pseudogene', 'processed_transcript']:
+            if ensembl_trx[trx]['biotype'] == 'nmd':
                 continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if attrs['MS'] >= 3:
+                start, stop, ORF_length = attrs['start'], attrs['stop'], attrs['ORF_length']
+                if ORF_length/seq_len >= 0.95 or start == 0 or stop == seq_len:
+                    continue
+                if attrs['MS'] >= 1 or attrs['TE'] >= 1:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor and seq_len <= 15000:
                 dataset[trx] = {'mapped_seq': map_seq(seq),

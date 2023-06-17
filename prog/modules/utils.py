@@ -79,42 +79,6 @@ def find_orfs(seq):
     ORFs = sorted(ORFs, key=lambda x: x[0])
     return ORFs
 
-codon_table = {
-            'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
-            'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-            'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
-            'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
-            'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
-            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
-            'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
-            'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
-            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
-            'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
-            'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-            'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
-            'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
-            'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
-            'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
-            'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W',
-            }
-
-def shuffle_seq(seq, start, stop):
-    start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
-    seq_copy_list = list(seq)  
-    random.shuffle(seq_copy_list) 
-    seq_copy_list[start:start+3] = list(start_codon)
-    seq_copy_list[stop-3:stop] = list(stop_codon)
-    syn_seq = ''.join(seq_copy_list) 
-    # Check and replace start and stop codons between start and stop
-    for i in range(start+3, stop-3, 3):
-        codon = syn_seq[i:i+3]
-        if codon in ['TAA', 'TAG', 'TGA', 'ATG']:
-            new_codons = [x for x in codon_table if x not in ['TAA', 'TAG', 'TGA', 'ATG']]
-            new_codon = random.choice(new_codons)
-            seq_copy_list[i:i+3] = list(new_codon)
-    syn_seq = ''.join(seq_copy_list)
-    return syn_seq
-
 def find_coordinates(orf_seq, trx_seq):
     length = len(orf_seq)
     start = trx_seq.find(orf_seq)

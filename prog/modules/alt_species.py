@@ -47,17 +47,21 @@ class Data:
         cds_dict = self.get_cds()
         dataset = dict()
         for trx, attrs in tqdm(trx_dict.items()):
+            trx_id = trx.split('|')[1]
             trx_seq, seq_len = attrs['seq'], len(attrs['seq'])
             cds_seq = cds_dict[trx]['seq']
-            seq_tensor = torch.zeros(1, seq_len).view(-1)
+            if trx_id in dataset:
+                seq_tensor = dataset[trx_id]['mapped_cds']
+            else:
+                seq_tensor = torch.zeros(1, seq_len).view(-1)
             if cds_seq != 'Sequence unavailable':
                 start, stop = find_coordinates(cds_seq, trx_seq)
                 seq_tensor = map_cds(seq_tensor, start, stop, 1)
             trx_coverage = torch.count_nonzero(seq_tensor)/seq_len
             cds_len = torch.count_nonzero(seq_tensor)
-            if trx_coverage > 0.9 or cds_len > 500:
+            if seq_len > 15000 or cds_len > 1500 or trx_coverage > 0.95:
                 continue
-            if 0 in seq_tensor and 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': map_seq(trx_seq),
+            if 1 in seq_tensor:
+                dataset[trx_id] = {'mapped_seq': map_seq(trx_seq),
                                 'mapped_cds': seq_tensor}
         return dataset
