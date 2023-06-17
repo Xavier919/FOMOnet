@@ -71,9 +71,6 @@ if __name__ == "__main__":
             loss = loss.cpu().detach().numpy()
             writer.add_scalar("Loss/train", loss, epoch)
             losses.append(loss)
-            if loss < best_model:
-                best_model = loss
-                torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(losses)}')
         fomonet.eval()
         test_losses = []
@@ -86,6 +83,9 @@ if __name__ == "__main__":
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
             test_losses.append(test_loss)
+        if np.mean(test_losses) < best_model:
+            best_model = np.mean(test_losses)
+            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
 
     writer.flush()
