@@ -26,6 +26,7 @@ parser.add_argument('test_data')
 parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
+parser.add_argument('wd', type=float)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     epochs = args.epochs
     lr = args.lr
+    wd = args.wd
 
     #create DataLoader object for train & test data
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
@@ -51,7 +53,7 @@ if __name__ == "__main__":
 
     #instantiate model, optimizer and loss function
     fomonet = FOMOnet(num_channels=4).cuda()
-    optimizer = optim.Adam(fomonet.parameters(), lr)
+    optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
     #loss_function = nn.BCELoss(reduction='none').cuda()
     loss_function = nn.MSELoss(reduction='none').cuda()
 
