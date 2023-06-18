@@ -5,7 +5,6 @@ from torch.nn.utils.rnn import pad_sequence
 
 def pack_seqs(Xy):
     seq1, seq2 = zip(*Xy)
-    #seq1, seq2 = Xy
     max_len = max([x.shape[-1] for x in seq1])+500
     seq1 = [torch.nn.functional.pad(x, pad=((max_len - x.shape[-1])//2, max_len - x.shape[-1] - (max_len - x.shape[-1])//2), mode='constant', value=0) for x in seq1]
     seq2 = [torch.nn.functional.pad(y, pad=((max_len - y.shape[-1])//2, max_len - y.shape[-1] - (max_len - y.shape[-1])//2), mode='constant', value=0) for y in seq2]
