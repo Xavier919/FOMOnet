@@ -57,9 +57,8 @@ class Data:
             if cds_seq != 'Sequence unavailable':
                 start, stop = find_coordinates(cds_seq, trx_seq)
                 seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            trx_coverage = torch.count_nonzero(seq_tensor)/seq_len
-            cds_len = torch.count_nonzero(seq_tensor)
-            if seq_len > 30000:
+            
+            if seq_len > 30000 or (start, stop) not in find_orfs(trx_seq):
                 continue
             if 1 in seq_tensor:
                 dataset[trx_id] = {'mapped_seq': map_seq(trx_seq),
