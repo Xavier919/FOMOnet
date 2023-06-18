@@ -21,8 +21,11 @@ writer = SummaryWriter()
 test_writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('train_data')
-parser.add_argument('test_data')
+parser.add_argument('split0')
+parser.add_argument('split1')
+parser.add_argument('split2')
+parser.add_argument('split3')
+parser.add_argument('split4')
 parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
@@ -34,8 +37,15 @@ if __name__ == "__main__":
     print(args.tag)
 
     #load train & test data
-    X_train, y_train = pickle.load(open(args.train_data, 'rb'))
-    X_test, y_test = pickle.load(open(args.test_data, 'rb'))
+    X_0, y_0 = pickle.load(open(args.split0, 'rb'))
+    X_1, y_1 = pickle.load(open(args.split1, 'rb'))
+    X_2, y_2 = pickle.load(open(args.split2, 'rb'))
+    X_3, y_3 = pickle.load(open(args.split3, 'rb'))
+
+    X_test, y_test = pickle.load(open(args.split4, 'rb'))
+
+    X_train = X_0+X_1+X_2+X_3
+    y_train = y_0+y_1+y_2+y_3
 
     #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)

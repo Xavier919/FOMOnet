@@ -59,9 +59,9 @@ class Data:
                 seq_tensor = map_cds(seq_tensor, start, stop, 1)
             trx_coverage = torch.count_nonzero(seq_tensor)/seq_len
             cds_len = torch.count_nonzero(seq_tensor)
-            if seq_len > 15000 or cds_len > 1500 or trx_coverage > 0.95:
+            if seq_len > 30000:
                 continue
             if 1 in seq_tensor:
                 dataset[trx_id] = {'mapped_seq': map_seq(trx_seq),
-                                'mapped_cds': seq_tensor}
+                                   'mapped_cds': seq_tensor}
         return dataset
