@@ -37,7 +37,7 @@ if __name__ == "__main__":
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
     print(f'weight decay:{args.wd}\n')
-    print(f'batch size:{args.wd}\n')
+    print(f'batch size:{args.batch_size}\n')
 
     #load train & test data
     X_0, y_0 = pickle.load(open(args.split0, 'rb'))
