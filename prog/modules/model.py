@@ -20,14 +20,11 @@ class FOMOnet(nn.Module):
         self.res_encoder5 = self._residual_block(256, 512)
         self.conv_encoder6 = self._contraction_block(512, 1024)
         self.res_encoder6 = self._residual_block(512, 1024)
-
         #bottleneck
         self.bottleneck = self._bottleneck_block(1024, 1024)
         self.res_encoder_bot = self._residual_block(1024, 1024)
-
         #middle
         self.conv_mid_decoder = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
-
         #decoder
         self.conv_decoder4 = self._expansion_block(1024, 256)
         self.res_decoder4 = self._residual_block_dec(1024, 256)
@@ -118,7 +115,7 @@ class FOMOnet(nn.Module):
         return sigmoid(out)
 
     @staticmethod
-    def _conv_block(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _conv_block(in_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
@@ -134,7 +131,7 @@ class FOMOnet(nn.Module):
         return block
 
     @staticmethod
-    def _contraction_block(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _contraction_block(in_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.MaxPool1d(kernel_size=2),
@@ -151,7 +148,7 @@ class FOMOnet(nn.Module):
         return block
     
     @staticmethod
-    def _residual_block(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _residual_block(in_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.MaxPool1d(kernel_size=2),
@@ -164,7 +161,7 @@ class FOMOnet(nn.Module):
         return block
     
     @staticmethod
-    def _bottleneck_block(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _bottleneck_block(in_channels, out_channels, kernel_size=5, dropout=0.2):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
@@ -175,7 +172,7 @@ class FOMOnet(nn.Module):
         return block
 
     @staticmethod
-    def _expansion_block(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _expansion_block(in_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
@@ -192,7 +189,7 @@ class FOMOnet(nn.Module):
         return block
     
     @staticmethod
-    def _residual_block_dec(in_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _residual_block_dec(in_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
@@ -204,7 +201,7 @@ class FOMOnet(nn.Module):
         return block
 
     @staticmethod
-    def _final_block(in_channels, mid_channels, out_channels, kernel_size=5, dropout=0.5):
+    def _final_block(in_channels, mid_channels, out_channels, kernel_size=5, dropout=0.2):
 
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=kernel_size, groups=in_channels, padding='same'),
