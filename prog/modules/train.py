@@ -14,6 +14,10 @@ from transcripts import Transcripts
 from utils import *
 import argparse
 
+import torch.nn.parallel
+import torch.backends.cudnn as cudnn
+from torch.nn.parallel import DataParallel
+
 #create runs directory for curves visualization with tensorboard
 #shutil.rmtree(f'runs/', ignore_errors=True)
 #os.mkdir('runs')
@@ -54,9 +58,15 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
 
+    device_ids = [0, 1]  # List of GPU device IDs to use
+    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(i) for i in device_ids)
+
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet(num_channels=4).cuda()
-    optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
+    fomonet = FOMOnet(num_channels=4)
+    fomonet = DataParallel(fomonet, device_ids=device_ids)
+    fomonet.cuda()
+
+    optimizer = optim.Adam(fomonet.module.parameters(), lr, weight_decay=wd)
     loss_function = nn.BCELoss(reduction='none').cuda()
     #loss_function = nn.MSELoss(reduction='none').cuda()
 
