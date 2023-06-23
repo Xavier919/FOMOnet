@@ -44,9 +44,6 @@ if __name__ == "__main__":
     X_train, y_train = pickle.load(open(args.train_split, 'rb'))
     X_test, y_test = pickle.load(open(args.test_split, 'rb'))
 
-    X_train = [one_hot(x for x in X_train]
-    X_test = 
-
     #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)
@@ -61,12 +58,8 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
 
-    device_ids = [0, 1]  # List of GPU device IDs to use
-    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(i) for i in device_ids)
-
     #instantiate model, optimizer and loss function
     fomonet = FOMOnet(num_channels=4)
-    fomonet = DataParallel(fomonet, device_ids=device_ids)
     fomonet.cuda()
 
     optimizer = optim.Adam(fomonet.module.parameters(), lr, weight_decay=wd)
