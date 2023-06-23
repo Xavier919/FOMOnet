@@ -22,7 +22,6 @@ class FOMOnet(nn.Module):
         self.res_encoder6 = self._residual_block(512, 1024)
         #bottleneck
         self.bottleneck = self._bottleneck_block(1024, 1024)
-        self.res_encoder_bot = self._residual_block(1024, 1024)
         #middle
         self.conv_mid_decoder = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         #decoder
@@ -55,24 +54,24 @@ class FOMOnet(nn.Module):
         encode_block1 = self.conv_encoder1(x)
 
         encode_block2 = self.conv_encoder2(encode_block1)
-        residual_block2 = self.res_encoder2(encode_block1)
-        encode_block2 += residual_block2
+        #residual_block2 = self.res_encoder2(encode_block1)
+        #encode_block2 += residual_block2
 
         encode_block3 = self.conv_encoder3(encode_block2)
-        residual_block3 = self.res_encoder3(encode_block2)
-        encode_block3 += residual_block3
+        #residual_block3 = self.res_encoder3(encode_block2)
+        #encode_block3 += residual_block3
 
         encode_block4 = self.conv_encoder4(encode_block3)
-        residual_block4 = self.res_encoder4(encode_block3)
-        encode_block4 += residual_block4
+        #residual_block4 = self.res_encoder4(encode_block3)
+        #encode_block4 += residual_block4
 
         encode_block5 = self.conv_encoder5(encode_block4)
-        residual_block5 = self.res_encoder5(encode_block4)
-        encode_block5 += residual_block5
+        #residual_block5 = self.res_encoder5(encode_block4)
+        #encode_block5 += residual_block5
 
         encode_block6 = self.conv_encoder6(encode_block5)
-        residual_block6 = self.res_encoder6(encode_block5)
-        encode_block6 += residual_block6
+        #residual_block6 = self.res_encoder6(encode_block5)
+        #encode_block6 += residual_block6
 
         #bottleneck
         bottleneck_ = self.bottleneck(encode_block6)
@@ -84,26 +83,26 @@ class FOMOnet(nn.Module):
         cropped5 = self.crop(decode_middle, encode_block5)
         decode_block5 = torch.cat((decode_middle, cropped5), 1)
         cat_layer4 = self.conv_decoder4(decode_block5)
-        cat_layer4 += self.res_decoder4(decode_block5)
-        cat_layer4 = self.transpose4(cat_layer4)
+        #cat_layer4 += self.res_decoder4(decode_block5)
+        #cat_layer4 = self.transpose4(cat_layer4)
 
         cropped4 = self.crop(cat_layer4, encode_block4)
         decode_block4 = torch.cat((cat_layer4, cropped4), 1)
         cat_layer3 = self.conv_decoder3(decode_block4)
-        cat_layer3 += self.res_decoder3(decode_block4)
-        cat_layer3 = self.transpose3(cat_layer3)
+        #cat_layer3 += self.res_decoder3(decode_block4)
+        #cat_layer3 = self.transpose3(cat_layer3)
 
         cropped3 = self.crop(cat_layer3, encode_block3)
         decode_block3 = torch.cat((cat_layer3, cropped3), 1)
         cat_layer2 = self.conv_decoder2(decode_block3)
-        cat_layer2 += self.res_decoder2(decode_block3)
-        cat_layer2 = self.transpose2(cat_layer2)
+        #cat_layer2 += self.res_decoder2(decode_block3)
+        #cat_layer2 = self.transpose2(cat_layer2)
 
         cropped2 = self.crop(cat_layer2, encode_block2)
         decode_block2 = torch.cat((cat_layer2, cropped2), 1)
         cat_layer1 = self.conv_decoder1(decode_block2)
-        cat_layer1 += self.res_decoder1(decode_block2)
-        cat_layer1 = self.transpose1(cat_layer1)
+        #cat_layer1 += self.res_decoder1(decode_block2)
+        #cat_layer1 = self.transpose1(cat_layer1)
 
         cropped1 = self.crop(cat_layer1, encode_block1)
         decode_block1 = torch.cat((cat_layer1, cropped1), 1)
