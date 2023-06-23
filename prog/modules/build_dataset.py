@@ -267,16 +267,18 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
-        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            if trx not in selected_trxps:
+            #if trx not in selected_trxps:
+            #    continue
+            if ensembl_trx[trx]['tsl'] != 'tsl1':
                 continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop, ORF_length = attrs['start'], attrs['stop'], attrs['ORF_length']
-                if ORF_length/seq_len >= 0.95 or start == 0 or stop == seq_len:
+                if seq_len > 30000:
                     continue
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
