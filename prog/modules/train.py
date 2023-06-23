@@ -44,6 +44,9 @@ if __name__ == "__main__":
     X_train, y_train = pickle.load(open(args.train_split, 'rb'))
     X_test, y_test = pickle.load(open(args.test_split, 'rb'))
 
+    X_train = [one_hot(x for x in X_train]
+    X_test = 
+
     #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)
@@ -68,7 +71,6 @@ if __name__ == "__main__":
 
     optimizer = optim.Adam(fomonet.module.parameters(), lr, weight_decay=wd)
     loss_function = nn.BCELoss(reduction='none').cuda()
-    #loss_function = nn.MSELoss(reduction='none').cuda()
 
     #train model
     best_model = 1.0
@@ -101,7 +103,7 @@ if __name__ == "__main__":
             test_losses.append(test_loss)
         if np.mean(test_losses) < best_model:
             best_model = np.mean(test_losses)
-            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
+            torch.save(fomonet.module.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
 
     writer.flush()
