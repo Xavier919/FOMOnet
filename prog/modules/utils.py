@@ -2,6 +2,7 @@ import torch
 import torch
 import random
 from torch.nn.utils.rnn import pad_sequence
+import numpy as np
 
 def pack_seqs(Xy):
     seq1, seq2 = zip(*Xy)
@@ -18,14 +19,6 @@ def get_loss(outputs, X, y, loss_function):
     loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
     mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=2).view(-1)).mean()
     return mean_loss
-
-def translate(trxp_seq, frame):
-    amino_acids = list()
-    for idx in list(range(frame, len(trxp_seq), 3)):
-        codon = trxp_seq[idx:idx+3]
-        if len(codon) == 3 and codon in self.codon_table:
-            amino_acids.append(self.codon_table[codon])
-    return ''.join(amino_acids)
 
 def one_hot(seqs):
     tensors = []
@@ -77,6 +70,22 @@ def find_orfs(seq):
                     break
     ORFs = sorted(ORFs, key=lambda x: x[0])
     return ORFs
+
+def sliding_window(sequence, window_size):
+    for i in range(len(sequence) - window_size + 1):
+        window = sequence[i:i+window_size]
+        if np.any(window > 0.5) and np.any(window < 0.5):
+            yield i, i+window_size
+def pred_orfs(out, seq, window_size):
+    window_coordinates = list(sliding_window(out, window_size))
+    orfs = find_orfs(seq)
+    preds = []
+    for start, stop in orfs:
+        start_bool = any(start in range(x[0], x[1]) for x in window_coordinates)
+        stop_bool = any(stop in range(x[0], x[1]+1) for x in window_coordinates)
+        if start_bool==True and stop_bool==True:
+            preds.append((start,stop))
+    return preds
 
 def find_coordinates(orf_seq, trx_seq):
     length = len(orf_seq)
