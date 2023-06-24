@@ -62,7 +62,7 @@ if __name__ == "__main__":
     fomonet = FOMOnet(num_channels=4)
     fomonet.cuda()
 
-    optimizer = optim.Adam(fomonet.module.parameters(), lr, weight_decay=wd)
+    optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
     loss_function = nn.BCELoss(reduction='none').cuda()
 
     #train model
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             test_losses.append(test_loss)
         if np.mean(test_losses) < best_model:
             best_model = np.mean(test_losses)
-            torch.save(fomonet.module.state_dict(), f'fomonet{args.tag}.pt')
+            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
 
     writer.flush()
