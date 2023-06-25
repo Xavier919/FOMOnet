@@ -89,7 +89,7 @@ class FOMOnet(nn.Module):
 
         #bottleneck
         bottleneck = self.bottleneck(encode_block6)
-        residual_bot = self.res_bot(encode_block6)
+        residual_bot = self.res_bottleneck(encode_block6)
         bottleneck += residual_bot
 
         #middle
