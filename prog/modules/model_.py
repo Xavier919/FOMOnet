@@ -9,45 +9,41 @@ class FOMOnet(nn.Module):
         super().__init__()
 
         self.maxpool = nn.MaxPool1d(kernel_size=2)
-        #encoder
+
         self.conv_encoder1 = self.conv_block(num_channels, 32)
-        self.res_encoder1 = self.res_block(num_channels, 32)
         self.conv_encoder2 = self.conv_block(32, 64)
-        self.res_encoder2 = self.res_block(32, 64)
         self.conv_encoder3 = self.conv_block(64, 128)
-        self.res_encoder3 = self.res_block(64, 128)
         self.conv_encoder4 = self.conv_block(128, 256)
-        self.res_encoder4 = self.res_block(128, 256)
         self.conv_encoder5 = self.conv_block(256, 512)
-        self.res_encoder5 = self.res_block(256, 512)
         self.conv_encoder6 = self.conv_block(512, 1024)
+        self.bottleneck = self.conv_block(1024, 1024)
+
+        self.res_encoder1 = self.res_block(num_channels, 32)
+        self.res_encoder2 = self.res_block(32, 64)
+        self.res_encoder3 = self.res_block(64, 128)
+        self.res_encoder4 = self.res_block(128, 256)
+        self.res_encoder5 = self.res_block(256, 512)
         self.res_encoder6 = self.res_block(512, 1024)
-        #bottleneck
-        self.bottleneck = self.bot_block(1024, 1024)
         self.res_bottleneck = self.res_block(1024, 1024)
-        #middle
-        self.upsample1 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
-        #decoder
+
         self.conv_decoder4 = self.conv_block(1024, 512)
-        self.res_decoder4 = self.res_block(1024, 512)
-        self.upsample2 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
-
         self.conv_decoder3 = self.conv_block(512, 256)
-        self.res_decoder3 = self.res_block(512, 256)
-        self.upsample3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
-
         self.conv_decoder2 = self.conv_block(256, 128)
-        self.res_decoder2 = self.res_block(256, 128)
-        self.upsample4 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
-
         self.conv_decoder1 = self.conv_block(128, 64)
-        self.res_decoder1 = self.res_block(128, 64)
-        self.upsample5 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
-
         self.conv_decoder0 = self.conv_block(64, 32)
+        self.final_layer = self.final_block(32, 1)
+
+        self.res_decoder4 = self.res_block(1024, 512)
+        self.res_decoder3 = self.res_block(512, 256)
+        self.res_decoder2 = self.res_block(256, 128)
+        self.res_decoder1 = self.res_block(128, 64)
         self.res_decoder0 = self.res_block(64, 32)
 
-        self.final_layer = self.final_block(32, 1)
+        self.upsample1 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
+        self.upsample2 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
+        self.upsample3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
+        self.upsample4 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
+        self.upsample5 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
 
     def crop(self, x, enc_ftrs):
         chs, dims = x.shape[1:]
@@ -160,20 +156,9 @@ class FOMOnet(nn.Module):
             nn.Dropout(p=p)
         )
         return block
-    
-    @staticmethod
-    def bot_block(in_channels, out_channels, k=5, p=0.5):
-        block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
-            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
-            nn.PReLU(),
-            nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=p)
-        )
-        return block
 
     @staticmethod
-    def final_block(in_channels, out_channels, k=1, p=0.5):
+    def final_block(in_channels, out_channels, k=1):
 
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, k, padding='same'),
