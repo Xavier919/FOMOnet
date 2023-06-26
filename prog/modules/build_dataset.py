@@ -287,24 +287,27 @@ class Data:
         return dataset
 
     def alt_dataset(self, ensembl_trx, trx_orfs):
-        _, selected_genes = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            if ensembl_trx[trx]['gene_name'] in selected_genes:
-                continue
-            if ensembl_trx[trx]['tsl'] != 'tsl1':
-                continue
+            #if trx not in selected_trxps:
+            #    continue
+            skip = 'n'
             if ensembl_trx[trx]['biotype'] == 'nmd':
                 continue
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
-                start, stop, ORF_length = attrs['start'], attrs['stop'], attrs['ORF_length']
-                if ORF_length/seq_len >= 0.95 or start == 0 or stop == seq_len:
-                    continue
-                if attrs['MS'] >= 1 or attrs['TE'] >= 1:
+                start, stop = attrs['start'], attrs['stop']
+                if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor and seq_len <= 15000:
+                    if stop-start > 1500:
+                        skip = 'y'
+            if torch.count_nonzero(seq_tensor)/seq_len > 0.95:
+                continue
+            if 1 in seq_tensor[0:5] or 1 in seq_tensor[seq_len-5:seq_len]:
+                continue
+            if 1 in seq_tensor and seq_len < 15000 and skip == 'n':
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
