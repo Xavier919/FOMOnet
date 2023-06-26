@@ -7,8 +7,8 @@ from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
-#from tqdm.notebook import tqdm
-from utils import *
+from tqdm.notebook import tqdm
+from modules.utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -100,7 +100,7 @@ def get_report(preds, trxps):
         preds = bin_pred(out, 0.5)
         recall = recall_score(target, preds)
         iou = iou_score(target, preds)
-        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7)
+        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 21)
         report[trx] = {'out': out,
                        'mapped_seq':sequence,
                        'mapped_cds': target,
