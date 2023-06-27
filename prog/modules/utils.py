@@ -48,13 +48,11 @@ def map_back(seq):
 def find_orfs(seq):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
     frames = [0,1,2]
-    ORFs = []
-    #for start_codon in start_codons:
+    orfs = []
     for frame in frames:
         starts, stops = [], []
         for idx in list(range(frame, len(seq), 3)):
             codon = seq[idx:idx+3]
-            #if codon == start_codon
             if codon in start_codons: 
                 starts.append(idx)
             elif codon in stop_codons:
@@ -65,17 +63,17 @@ def find_orfs(seq):
                 if stop - start < 90 or any(i > start for i in stops[idx+1:]):
                     continue
                 else:
-                    #ORFs.append((start, stop, frame+1))
-                    ORFs.append((start, stop))
-                    break
-    ORFs = sorted(ORFs, key=lambda x: x[0])
-    return ORFs
+                    orfs.append((start, stop))
+    orfs = sorted(orfs, key=lambda x: x[0])
+    return orfs
 
 def sliding_window(sequence, window_size):
     for i in range(len(sequence) - window_size + 1):
         window = sequence[i:i+window_size]
         if np.any(window > 0.5) and np.any(window < 0.5):
             yield i, i+window_size
+        #if np.max(window) - np.min(window) >= 0.25:
+        #    yield i, i+window_size
 def pred_orfs(out, seq, window_size):
     window_coordinates = list(sliding_window(out, window_size))
     orfs = find_orfs(seq)
