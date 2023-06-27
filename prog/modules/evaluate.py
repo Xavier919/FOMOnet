@@ -83,8 +83,8 @@ def get_preds(model, X_test, y_test):
     preds = []
     model.eval()
     for X, y in list(zip(X_test, y_test)):
-        X_ = torch.cat([torch.zeros(2500),X,torch.zeros(2500)],dim=0)
-        y_ = torch.cat([torch.zeros(2500),y,torch.zeros(2500)],dim=0)
+        X_ = torch.cat([torch.zeros(5000),X,torch.zeros(5000)],dim=0)
+        y_ = torch.cat([torch.zeros(5000),y,torch.zeros(5000)],dim=0)
         X_one_hot = one_hot(X_).T
         outputs = model(X_one_hot).view(-1)
         preds.append((X_.cpu().detach().numpy(), y_.cpu().detach().numpy(), outputs.cpu().detach().numpy()))
@@ -100,7 +100,7 @@ def get_report(preds, trxps):
         preds = bin_pred(out, 0.5)
         recall = recall_score(target, preds)
         iou = iou_score(target, preds)
-        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7)
+        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 20, 0.5)
         report[trx] = {'out': out,
                        'mapped_seq':sequence,
                        'mapped_cds': target,

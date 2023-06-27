@@ -67,23 +67,28 @@ def find_orfs(seq):
     orfs = sorted(orfs, key=lambda x: x[0])
     return orfs
 
-def sliding_window(sequence, window_size):
-    for i in range(len(sequence) - window_size + 1):
-        window = sequence[i:i+window_size]
-        if np.any(window > 0.5) and np.any(window < 0.5):
-            yield i, i+window_size
-        #if np.max(window) - np.min(window) >= 0.25:
-        #    yield i, i+window_size
-def pred_orfs(out, seq, window_size):
-    window_coordinates = list(sliding_window(out, window_size))
-    orfs = find_orfs(seq)
-    preds = []
-    for start, stop in orfs:
-        start_bool = any(start in range(x[0], x[1]) for x in window_coordinates)
-        stop_bool = any(stop in range(x[0], x[1]+1) for x in window_coordinates)
-        if start_bool==True and stop_bool==True:
-            preds.append((start,stop))
-    return preds
+def pred_orfs(out, seq, window_size=7, threshold=0.5):
+    pred_orfs = []
+    ws = window_size
+    for start, stop in find_orfs(seq):
+        if start < ws:
+            start_window = out[:start+ws]
+        else:
+            start_window = out[start-ws:start+ws]
+        min_val, max_val = np.min(start_window), np.max(start_window)
+        min_index = np.unravel_index(np.argmin(start_window), start_window.shape)
+        max_index = np.unravel_index(np.argmax(start_window), start_window.shape)
+        if (max_val - min_val >= threshold and max_index > min_index) or (start == 0 and out[start] >= 0.5):
+            if len(seq) < stop+ws:
+                stop_window = out[stop-ws:]
+            else:
+                stop_window = out[stop-ws:stop+ws]
+            min_val, max_val = np.min(stop_window), np.max(stop_window)
+            min_index = np.unravel_index(np.argmin(stop_window), stop_window.shape)
+            max_index = np.unravel_index(np.argmax(stop_window), stop_window.shape)
+            if (max_val - min_val >= threshold and max_index < min_index) or (stop == len(seq) and out[stop-1] >= 0.5):
+                pred_orfs.append((start, stop))
+    return pred_orfs
 
 def find_coordinates(orf_seq, trx_seq):
     length = len(orf_seq)
