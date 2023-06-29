@@ -44,6 +44,7 @@ class FOMOnet(nn.Module):
         self.upsample3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
+        
 
     def crop(self, x, enc_ftrs):
         chs, dims = x.shape[1:]

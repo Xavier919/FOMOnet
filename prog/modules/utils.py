@@ -45,8 +45,11 @@ def map_back(seq):
     return "".join([mapping_back[nt] for nt in seq.int().tolist() if nt != 0])
 
 
-def find_orfs(seq):
-    start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
+def find_orfs(seq, keep_longest=False, nc_starts=False):
+    if nc_starts:
+        start_codons, stop_codons = ['ATG', 'TTG', 'GTG', 'CTG'], ['TGA', 'TAA', 'TAG']
+    else:
+        start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
     frames = [0,1,2]
     orfs = []
     for frame in frames:
@@ -64,6 +67,8 @@ def find_orfs(seq):
                     continue
                 else:
                     orfs.append((start, stop))
+                    if keep_longest == True:
+                        break
     orfs = sorted(orfs, key=lambda x: x[0])
     return orfs
 
@@ -78,7 +83,7 @@ def pred_orfs(out, seq, window_size=7, threshold=0.5):
         min_val, max_val = np.min(start_window), np.max(start_window)
         min_index = np.unravel_index(np.argmin(start_window), start_window.shape)
         max_index = np.unravel_index(np.argmax(start_window), start_window.shape)
-        if (max_val - min_val >= threshold and max_index > min_index) or (start == 0 and out[start] >= 0.5):
+        if (max_val - min_val >= threshold and max_index > min_index) or (start < ws and any(i >= 0.5 for i in start_window)):
             if len(seq) < stop+ws:
                 stop_window = out[stop-ws:]
             else:
@@ -86,7 +91,7 @@ def pred_orfs(out, seq, window_size=7, threshold=0.5):
             min_val, max_val = np.min(stop_window), np.max(stop_window)
             min_index = np.unravel_index(np.argmin(stop_window), stop_window.shape)
             max_index = np.unravel_index(np.argmax(stop_window), stop_window.shape)
-            if (max_val - min_val >= threshold and max_index < min_index) or (stop == len(seq) and out[stop-1] >= 0.5):
+            if (max_val - min_val >= threshold and max_index < min_index) or (len(seq) < stop+ws and any(i >= 0.5 for i in stop_window)):
                 pred_orfs.append((start, stop))
     return pred_orfs
 

@@ -100,7 +100,7 @@ def get_report(preds, trxps):
         preds = bin_pred(out, 0.5)
         recall = recall_score(target, preds)
         iou = iou_score(target, preds)
-        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 20, 0.5)
+        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7, 0.25)
         report[trx] = {'out': out,
                        'mapped_seq':sequence,
                        'mapped_cds': target,
