@@ -298,7 +298,7 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             keep = 'n'
             seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            if biotype != 'protein_coding' or seq_len > 30000:
+            if biotype not in ['processed_transcript', 'pseudogene'] or seq_len > 30000:
                 continue
             if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
                 continue
