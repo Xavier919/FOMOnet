@@ -59,7 +59,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
 
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet(num_channels=4)
+    fomonet = FOMOnet()
     fomonet.cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
