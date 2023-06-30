@@ -60,7 +60,6 @@ if __name__ == "__main__":
 
     #instantiate model, optimizer and loss function
     fomonet = FOMOnet(num_channels=4)
-    fomonet.load_state_dict(torch.load('fomonethuman3k_alt.pt', map_location=torch.device('cuda')))
     fomonet.cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
