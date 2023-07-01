@@ -10,7 +10,7 @@ class FOMOnet(nn.Module):
 
         self.maxpool = nn.MaxPool1d(kernel_size=2)
         self.sigmoid = nn.Sigmoid()
-
+        #encoder convolutional blocks
         self.conv1 = self.conv_block(num_channels, 32)
         self.conv2 = self.conv_block(32, 64)
         self.conv3 = self.conv_block(64, 128)
@@ -18,7 +18,7 @@ class FOMOnet(nn.Module):
         self.conv5 = self.conv_block(256, 512)
         self.conv6 = self.conv_block(512, 1024)
         self.convbot = self.conv_block(1024, 1024)
-
+        #encoder residual blocks
         self.res1 = self.res_block(num_channels, 32)
         self.res2 = self.res_block(32, 64)
         self.res3 = self.res_block(64, 128)
@@ -26,20 +26,20 @@ class FOMOnet(nn.Module):
         self.res5 = self.res_block(256, 512)
         self.res6 = self.res_block(512, 1024)
         self.resbot = self.res_block(1024, 1024)
-
+        #decoder convolutional blocks
         self.dconv6 = self.conv_block(1024, 512)
         self.dconv5 = self.conv_block(512, 256)
         self.dconv4 = self.conv_block(256, 128)
         self.dconv3 = self.conv_block(128, 64)
         self.dconv2 = self.conv_block(64, 32)
         self.dconv1 = self.final_block(32, 1)
-
+        #decoder residual blocks
         self.dres6 = self.res_block(1024, 512)
         self.dres5 = self.res_block(512, 256)
         self.dres4 = self.res_block(256, 128)
         self.dres3 = self.res_block(128, 64)
         self.dres2 = self.res_block(64, 32)
-
+        #decoder upsample operations
         self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
@@ -124,11 +124,12 @@ class FOMOnet(nn.Module):
     @staticmethod
     def res_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
-            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            #nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            #nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=p)
+            #nn.Dropout(p=p)
         )
         return block
 
