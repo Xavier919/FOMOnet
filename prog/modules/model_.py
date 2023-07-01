@@ -100,7 +100,7 @@ class FOMOnet(nn.Module):
         cat2 = torch.cat((upsamp2, cropped2), 1)
         x = self.dconv2(cat2) + self.dres2(cat2)
         #decoder layer 1 (final layer)
-        out = self.final_layer(x)
+        out = self.dconv1(x)
         out = F.interpolate(out, init_shape)
 
         return self.sigmoid(out)
