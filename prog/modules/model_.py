@@ -17,15 +17,15 @@ class FOMOnet(nn.Module):
         enc_ftrs = []
         for i, ch in enumerate(self.enc_chs):
             if ch != self.enc_chs[-1]:
-                self.conv_block = self.conv_block(self.enc_chs[i], self.enc_chs[i+1])
-                self.res_block = self.res_block(self.enc_chs[i], self.enc_chs[i+1])
+                conv_block = self.conv_block(self.enc_chs[i], self.enc_chs[i+1])
+                res_block = self.res_block(self.enc_chs[i], self.enc_chs[i+1])
                 conv_block, res_block = self.conv_block(x), self.res_block(x)
                 conv_block += res_block
                 enc_ftrs.append(conv_block)
                 x = maxpool(conv_block)
             else:
-                self.conv_block = self.conv_block(self.enc_chs[i], self.enc_chs[i])
-                self.res_block = self.res_block(self.enc_chs[i], self.enc_chs[i])
+                conv_block = self.conv_block(self.enc_chs[i], self.enc_chs[i])
+                res_block = self.res_block(self.enc_chs[i], self.enc_chs[i])
                 conv_block, res_block = self.conv_block(x), self.res_block(x)
                 x = conv_block + res_block
         return x, enc_ftrs, init_shape
@@ -37,8 +37,8 @@ class FOMOnet(nn.Module):
                 transpose_ = transpose(x)
                 cropped = self.crop(transpose_, enc_ftrs[i])
                 cat = torch.cat((transpose_, cropped), 1)
-                self.conv_block = self.conv_block(self.dec_chs[i], self.dec_chs[i+1])
-                self.res_block = self.res_block(self.dec_chs[i], self.dec_chs[i+1])
+                conv_block = self.conv_block(self.dec_chs[i], self.dec_chs[i+1])
+                res_block = self.res_block(self.dec_chs[i], self.dec_chs[i+1])
                 conv_block, res_block = self.conv_block(cat), self.res_block(cat)
                 x = conv_block + res_block
             else:
@@ -57,7 +57,7 @@ class FOMOnet(nn.Module):
         enc_ftrs = torchvision.transforms.CenterCrop([chs, dims])(enc_ftrs)
         return enc_ftrs
 
-    #@staticmethod
+    @staticmethod
     def conv_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
@@ -73,7 +73,7 @@ class FOMOnet(nn.Module):
         )
         return block
     
-    #@staticmethod
+    @staticmethod
     def res_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
@@ -83,8 +83,8 @@ class FOMOnet(nn.Module):
             nn.Dropout(p=p)
         )
         return block
-
-    #@staticmethod
+    
+    @staticmethod
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
