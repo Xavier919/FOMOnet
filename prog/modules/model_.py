@@ -8,8 +8,8 @@ class FOMOnet(nn.Module):
     def __init__(self, num_channels=4):
         super().__init__()
 
+        #encoder pooling operation
         self.maxpool = nn.MaxPool1d(kernel_size=2)
-        self.sigmoid = nn.Sigmoid()
         #encoder convolutional blocks
         self.conv1 = self.conv_block(num_channels, 32)
         self.conv2 = self.conv_block(32, 64)
@@ -39,12 +39,14 @@ class FOMOnet(nn.Module):
         self.dres4 = self.res_block(256, 128)
         self.dres3 = self.res_block(128, 64)
         self.dres2 = self.res_block(64, 32)
-        #decoder upsample operations
+        #decoder upsampling operations
         self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
         self.upsample3 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
         self.upsample2 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
+        #output function
+        self.sigmoid = nn.Sigmoid()
 
     def crop(self, x, enc_ftrs):
         chs, dims = x.shape[1:]
@@ -121,14 +123,11 @@ class FOMOnet(nn.Module):
         return block
     
     @staticmethod
-    def res_block(in_channels, out_channels, k=5, p=0.5):
+    def res_block(in_channels, out_channels, k=5):
         block = nn.Sequential(
-            #nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
-            #nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            #nn.Dropout(p=p)
         )
         return block
 
