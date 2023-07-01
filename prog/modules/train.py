@@ -9,7 +9,7 @@ import os
 import shutil
 import numpy as np
 #project specific imports
-from model_ import FOMOnet
+from model import FOMOnet
 from transcripts import Transcripts
 from utils import *
 import argparse
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=24)
 
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet(enc_chs=(4,32,64,128,256,512,1024), dec_chs=(1024,512,256,128,64,32))
+    fomonet = FOMOnet()
     fomonet.cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
