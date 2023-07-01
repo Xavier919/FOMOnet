@@ -267,14 +267,10 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
-        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            #if trx not in selected_trxps:
-            #    continue
-            skip = ''
             seq, seq_len, biotype, tsl = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['tsl']
-            if tsl not in ['tsl1', 'tsl2', 'tsl3'] or biotype != 'protein_coding' or seq_len > 30000:
+            if biotype != 'protein_coding' or seq_len > 30000:
                 continue
             if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
                 continue
@@ -284,9 +280,9 @@ class Data:
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
                 elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
-                    skip = 'y'
-            if skip == 'y':
-                continue
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+                elif attrs['MS'] == 1 and attrs['TE'] == 1:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
@@ -297,7 +293,7 @@ class Data:
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, biotype, tsl = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['tsl']
-            if tsl not in ['tsl1', 'tsl2', 'tsl3'] or biotype != 'protein_coding' or seq_len > 30000:
+            if biotype not in ['processed_transcript', 'pseudogene'] or seq_len > 30000:
                 continue
             if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
                 continue
@@ -307,6 +303,8 @@ class Data:
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
                 elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+                elif attrs['MS'] == 1 and attrs['TE'] == 1:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
