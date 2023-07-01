@@ -296,9 +296,8 @@ class Data:
     def alt_dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            keep = 'n'
-            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            if biotype not in ['processed_transcript', 'pseudogene'] or seq_len > 30000:
+            seq, seq_len, biotype, tsl = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['tsl']
+            if tsl not in ['tsl1', 'tsl2', 'tsl3'] or biotype != 'protein_coding' or seq_len > 30000:
                 continue
             if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
                 continue
@@ -309,8 +308,7 @@ class Data:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
                 elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-                    keep = 'y'
-            if 1 in seq_tensor and keep == 'y':
+            if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
