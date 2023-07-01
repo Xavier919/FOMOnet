@@ -9,7 +9,7 @@ import os
 import shutil
 import numpy as np
 #project specific imports
-from model import FOMOnet
+from model_ import FOMOnet
 from transcripts import Transcripts
 from utils import *
 import argparse
