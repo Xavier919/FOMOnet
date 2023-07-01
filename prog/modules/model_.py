@@ -57,8 +57,7 @@ class FOMOnet(nn.Module):
         enc_ftrs = torchvision.transforms.CenterCrop([chs, dims])(enc_ftrs)
         return enc_ftrs
 
-    @staticmethod
-    def conv_block(in_channels, out_channels, k=5, p=0.5):
+    def conv_block(self, in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
@@ -73,8 +72,7 @@ class FOMOnet(nn.Module):
         )
         return block
     
-    @staticmethod
-    def res_block(in_channels, out_channels, k=5, p=0.5):
+    def res_block(self, in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
@@ -84,8 +82,7 @@ class FOMOnet(nn.Module):
         )
         return block
     
-    @staticmethod
-    def final_block(in_channels, out_channels, k=1):
+    def final_block(self, in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
