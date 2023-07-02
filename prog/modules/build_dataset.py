@@ -277,7 +277,7 @@ class Data:
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') or orf.startswith('II_'):
+                if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
                 elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
