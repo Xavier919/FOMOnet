@@ -247,9 +247,9 @@ class Data:
         for trx, orfs in trx_orfs.items():
             if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
-            if ensembl_trx[trx]["tsl"] != 'tsl1':
+            if len(ensembl_trx[trx]["sequence"]) > 30000:
                 continue
-            if len(ensembl_trx[trx]["sequence"]) > 15000:
+            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
                 continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
@@ -268,11 +268,10 @@ class Data:
 
     def dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
+        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype, tsl = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['tsl']
-            if biotype not in ['protein_coding', 'processed_transcript'] or seq_len > 30000 or tsl not in ['tsl1', 'tsl2', 'tsl3']:
-                continue
-            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
+            if trx not in selected_trxps:
                 continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
