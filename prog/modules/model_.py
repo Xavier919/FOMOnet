@@ -130,7 +130,7 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            nn.Dropout(p=p)
+            #nn.Dropout(p=p)
         )
         return block
 
