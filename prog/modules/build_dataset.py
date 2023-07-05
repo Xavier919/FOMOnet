@@ -164,8 +164,8 @@ class Data:
                     'gene_id':line["Gene stable ID"],
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
-                    'biotype': self.biotype_grouping[line["Transcript type"]],
-                    'og_biotype': line["Transcript type"],
+                    'biotype': self.biotype_grouping[line["Gene type"]],
+                    'og_biotype': line["Gene type"],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -184,7 +184,7 @@ class Data:
                 line = dict(zip(cols, row))
                 if 'ENST' not in line["transcript accession"]:
                     continue
-                if not any(x in line["protein accession numbers"] for x in ["IP_", 'ENSP', "II_"]):
+                if not any(x in line["protein accession numbers"] for x in ["IP_", "ENSP", "II_"]):
                     continue
                 trx = line["transcript accession"].split(".")[0]
                 altprot = line["protein accession numbers"].split(".")[0]
@@ -193,7 +193,7 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                if frame == 0 or chromosome == 'Y' or stop_codon not in ['TAA', 'TAG', 'TGA']:
+                if frame == 0 or start_codon not in ['ATG', 'TTG', 'CTG', 'GTG'] or stop_codon not in ['TAA', 'TAG', 'TGA']:
                     continue
                 altprots = dict()
                 if trx not in trx_orfs:
@@ -268,19 +268,18 @@ class Data:
 
     def dataset(self, ensembl_trx, trx_orfs):
         dataset = dict()
-        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            if trx not in selected_trxps:
+            seq, seq_len, tsl, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'], ensembl_trx[trx]['biotype']
+            if tsl != 'tsl1' or biotype != 'protein_coding':
                 continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
+                elif attrs['MS'] >= 3 or attrs['TE'] >= 3:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor:
+            if 1 in seq_tensor and seq_len < 30000:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
