@@ -237,7 +237,9 @@ class Data:
     def get_rnd_trx(self, ensembl_trx, trx_orfs):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
-            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
+            if ensembl_trx[trx]["biotype"] != "protein_coding":
+                continue
+            if not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
             if len(ensembl_trx[trx]["sequence"]) > 30000 or ensembl_trx[trx]['tsl'] != 'tsl1':
                 continue
