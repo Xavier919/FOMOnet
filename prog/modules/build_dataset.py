@@ -239,7 +239,7 @@ class Data:
         for trx, orfs in trx_orfs.items():
             if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
-            if len(ensembl_trx[trx]["sequence"]) > 30000:
+            if len(ensembl_trx[trx]["sequence"]) > 30000 or ensembl_trx[trx]['tsl'] != 'tsl1':
                 continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
