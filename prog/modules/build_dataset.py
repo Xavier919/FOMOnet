@@ -109,7 +109,7 @@ class Data:
                     cols = row
                     continue
                 line = dict(zip(cols, row)) 
-                if "ENST" in line['transcript accession'] :
+                if "ENST" in line['transcript accession']:
                     line['transcript accession'] = line['transcript accession'].split('.')[0]
                     op_trx_accession.add(line['transcript accession'])
         return op_trx_accession
@@ -241,8 +241,6 @@ class Data:
                 continue
             if len(ensembl_trx[trx]["sequence"]) > 30000:
                 continue
-            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
-                continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
                 if gene not in gene_trxps:
@@ -259,13 +257,12 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
+        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, tsl, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'], ensembl_trx[trx]['biotype']
-            if tsl != 'tsl1' or biotype != 'protein_coding':
+            if trx not in selected_trxps:
                 continue
-            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
-                continue
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
@@ -273,21 +270,8 @@ class Data:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
                 elif attrs['MS'] >= 3 or attrs['TE'] >= 3:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor and seq_len < 30000:
+            if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
-
-
-    def split_dataset(self, dataset, bins):
-        for idx, bin_ in enumerate(bins):
-            X_train = [y['mapped_seq'] for x,y in dataset.items() if x not in bin_]
-            y_train = [y['mapped_cds'] for x,y in dataset.items() if x not in bin_]
-            train_split = (X_train,y_train)
-            pickle.dump(train_split, open(f'data/train_split{idx}.pkl', 'wb'))
-
-            X_test = [y['mapped_seq'] for x,y in dataset.items() if x in bin_]
-            y_test = [y['mapped_cds'] for x,y in dataset.items() if x in bin_]
-            test_split = (X_test,y_test)
-            pickle.dump(test_split, open(f'data/test_split{idx}.pkl', 'wb'))
