@@ -232,14 +232,6 @@ class Data:
             if trx not in trx_orfs:
                 altprots = dict()
                 trx_orfs[trx] = altprots
-        
-        with open(self.unique_pept, 'r') as csv_:
-            for line in csv_:
-                ls = line.split(',')
-                p_acc, tx_acc, uniq_pep = ls[1], ls[2], ls[7]
-                if tx_acc in trx_orfs:
-                    if p_acc in trx_orfs[tx_acc]:
-                        trx_orfs[tx_acc][p_acc]['unique_pept'] = int(uniq_pep)
         return trx_orfs
 
     def get_rnd_trx(self, ensembl_trx, trx_orfs):
@@ -272,6 +264,8 @@ class Data:
             seq, seq_len, tsl, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'], ensembl_trx[trx]['biotype']
             if tsl != 'tsl1' or biotype != 'protein_coding':
                 continue
+            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
+                continue
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
@@ -285,28 +279,6 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
 
-    def alt_dataset(self, ensembl_trx, trx_orfs):
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype, tsl = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['tsl']
-            if biotype not in ['processed_transcript', 'pseudogene'] or seq_len > 30000:
-                continue
-            if len(trx_orfs[trx]) != len(find_orfs(ensembl_trx[trx]['sequence'], keep_longest=True)):
-                continue
-            seq_tensor = torch.zeros(1, seq_len).view(-1)
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
-                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
-                elif attrs['MS'] == 1 and attrs['TE'] == 1:
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': map_seq(seq),
-                                'mapped_cds': seq_tensor,
-                                'gene_name': ensembl_trx[trx]['gene_name']}
-        return dataset
 
     def split_dataset(self, dataset, bins):
         for idx, bin_ in enumerate(bins):
