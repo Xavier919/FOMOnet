@@ -16,7 +16,7 @@ class FOMOnet(nn.Module):
         self.conv3 = self.conv_block(64, 128)
         self.conv4 = self.conv_block(128, 256)
         self.conv5 = self.conv_block(256, 512)
-        #self.conv6 = self.conv_block(512, 1024)
+        self.conv6 = self.conv_block(512, 1024)
         self.convbot = self.conv_block(512, 512)
         #encoder residual blocks
         self.res1 = self.res_block(num_channels, 32)
@@ -24,23 +24,23 @@ class FOMOnet(nn.Module):
         self.res3 = self.res_block(64, 128)
         self.res4 = self.res_block(128, 256)
         self.res5 = self.res_block(256, 512)
-        #self.res6 = self.res_block(512, 1024)
+        self.res6 = self.res_block(512, 1024)
         self.resbot = self.res_block(512, 512)
         #decoder convolutional blocks
-        #self.dconv6 = self.conv_block(1024, 512)
+        self.dconv6 = self.conv_block(1024, 512)
         self.dconv5 = self.conv_block(512, 256)
         self.dconv4 = self.conv_block(256, 128)
         self.dconv3 = self.conv_block(128, 64)
         self.dconv2 = self.conv_block(64, 32)
         self.dconv1 = self.final_block(32, 1)
         #decoder residual blocks
-        #self.dres6 = self.res_block(1024, 512)
+        self.dres6 = self.res_block(1024, 512)
         self.dres5 = self.res_block(512, 256)
         self.dres4 = self.res_block(256, 128)
         self.dres3 = self.res_block(128, 64)
         self.dres2 = self.res_block(64, 32)
         #decoder upsampling operations
-        #self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
+        self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
         self.upsample3 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
@@ -71,15 +71,15 @@ class FOMOnet(nn.Module):
         block5 = self.conv5(x) + self.res5(x)
         x = self.maxpool(block5)
         #encoder layer 6
-        #block6 = self.conv6(x) + self.res6(x)
-        #x = self.maxpool(block6)
+        block6 = self.conv6(x) + self.res6(x)
+        x = self.maxpool(block6)
         #bottleneck layer
         bottleneck = self.convbot(x) + self.resbot(x)
         #decoder layer 6
-        #upsamp6 = self.upsample6(bottleneck)
-        #cropped6 = self.crop(upsamp6, block6)
-        #cat6 = torch.cat((upsamp6, cropped6), 1)
-        #x = self.dconv6(cat6) + self.dres6(cat6)
+        upsamp6 = self.upsample6(bottleneck)
+        cropped6 = self.crop(upsamp6, block6)
+        cat6 = torch.cat((upsamp6, cropped6), 1)
+        x = self.dconv6(cat6) + self.dres6(cat6)
         #decoder layer 5
         upsamp5 = self.upsample5(bottleneck)
         cropped5 = self.crop(upsamp5, block5)
