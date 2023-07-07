@@ -17,7 +17,7 @@ class FOMOnet(nn.Module):
         self.conv4 = self.conv_block(128, 256)
         self.conv5 = self.conv_block(256, 512)
         self.conv6 = self.conv_block(512, 1024)
-        self.convbot = self.conv_block(512, 512)
+        self.convbot = self.conv_block(1024, 1024)
         #encoder residual blocks
         self.res1 = self.res_block(num_channels, 32)
         self.res2 = self.res_block(32, 64)
@@ -25,7 +25,7 @@ class FOMOnet(nn.Module):
         self.res4 = self.res_block(128, 256)
         self.res5 = self.res_block(256, 512)
         self.res6 = self.res_block(512, 1024)
-        self.resbot = self.res_block(512, 512)
+        self.resbot = self.res_block(1024, 1024)
         #decoder convolutional blocks
         self.dconv6 = self.conv_block(1024, 512)
         self.dconv5 = self.conv_block(512, 256)
