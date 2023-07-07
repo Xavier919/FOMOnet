@@ -270,8 +270,6 @@ class Data:
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-                elif attrs['MS'] >= 3 or attrs['TE'] >= 3:
-                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
                                 'mapped_cds': seq_tensor,
