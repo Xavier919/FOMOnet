@@ -73,7 +73,7 @@ if __name__ == "__main__":
         for batch in train_loader:
             X = batch[0].view(len(batch[0]),1,-1).cuda()
             y = batch[1].view(len(batch[1]),-1).cuda()
-            X_one_hot = batch[2].view(len(batch[0]),4,-1).cuda()
+            X_one_hot = batch[2].view(len(batch[0]),3,-1).cuda()
             outputs = fomonet(X_one_hot).view(len(batch[0]),-1)
             fomonet.zero_grad()
             loss = get_loss(outputs, X, y, loss_function)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         for batch in test_loader:
             X = batch[0].view(len(batch[0]),1,-1).cuda()
             y = batch[1].view(len(batch[1]),-1).cuda()
-            X_one_hot = batch[2].view(len(batch[0]),4,-1).cuda()
+            X_one_hot = batch[2].view(len(batch[0]),3,-1).cuda()
             outputs = fomonet(X_one_hot).view(len(batch[0]),-1)
             test_loss = get_loss(outputs, X, y, loss_function)
             test_loss = test_loss.cpu().detach().numpy()
