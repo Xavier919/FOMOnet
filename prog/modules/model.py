@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 class FOMOnet(nn.Module):
 
-    def __init__(self, num_channels=4):
+    def __init__(self, num_channels=3):
         super().__init__()
 
         #encoder pooling operation
