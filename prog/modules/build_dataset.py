@@ -193,7 +193,7 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                if frame == 0 or start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA']:
+                if frame == 0 or start_codon not in ['ATG', 'TTG', 'CTG', 'GTG'] or stop_codon not in ['TAA', 'TAG', 'TGA']:
                     continue
                 altprots = dict()
                 if trx not in trx_orfs:

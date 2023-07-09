@@ -25,7 +25,7 @@ class FOMOnet(nn.Module):
         self.res4 = self.res_block(128, 256)
         self.res5 = self.res_block(256, 512)
         self.res6 = self.res_block(512, 1024)
-        self.resbot = self.res_block(1024, 1024)
+        #self.resbot = self.res_block(1024, 1024)
         #decoder convolutional blocks
         self.dconv6 = self.conv_block(1024, 512)
         self.dconv5 = self.conv_block(512, 256)
@@ -38,7 +38,7 @@ class FOMOnet(nn.Module):
         self.dres5 = self.res_block(512, 256)
         self.dres4 = self.res_block(256, 128)
         self.dres3 = self.res_block(128, 64)
-        self.dres2 = self.res_block(64, 32)
+        #self.dres2 = self.res_block(64, 32)
         #decoder upsampling operations
         self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
@@ -99,7 +99,7 @@ class FOMOnet(nn.Module):
         upsamp2 = self.upsample2(x)
         cropped2 = self.crop(upsamp2, block2)
         cat2 = torch.cat((upsamp2, cropped2), 1)
-        x = self.dconv2(cat2) + self.dres2(cat2)
+        x = self.dconv2(cat2) 
         #decoder layer 1 (final layer)
         out = self.dconv1(x)
         out = F.interpolate(out, init_shape)
@@ -125,12 +125,12 @@ class FOMOnet(nn.Module):
     @staticmethod
     def res_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
-            #nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
-            #nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            #nn.Dropout(p=p)
+            nn.Dropout(p=p)
         )
         return block
 
