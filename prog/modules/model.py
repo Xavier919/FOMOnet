@@ -19,7 +19,7 @@ class FOMOnet(nn.Module):
         self.conv6 = self.conv_block(512, 1024)
         self.convbot = self.conv_block(1024, 1024)
         #encoder residual blocks
-        self.res1 = self.res_block(num_channels, 32)
+        #self.res1 = self.res_block(num_channels, 32)
         self.res2 = self.res_block(32, 64)
         self.res3 = self.res_block(64, 128)
         self.res4 = self.res_block(128, 256)
@@ -56,7 +56,7 @@ class FOMOnet(nn.Module):
     def forward(self, x):
         init_shape = x.shape[2]
         #encoder layer 1
-        block1 = self.conv1(x) + self.res1(x)
+        block1 = self.conv1(x)
         x = self.maxpool(block1)
         #encoder layer 2
         block2 = self.conv2(x) + self.res2(x)
