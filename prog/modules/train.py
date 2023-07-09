@@ -55,8 +55,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=16)
 
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet()
-    fomonet.cuda()
+    fomonet = FOMOnet().cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
     loss_function = nn.BCELoss(reduction='none').cuda()
