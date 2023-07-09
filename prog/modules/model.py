@@ -74,7 +74,7 @@ class FOMOnet(nn.Module):
         block6 = self.conv6(x) + self.res6(x)
         x = self.maxpool(block6)
         #bottleneck layer
-        bottleneck = self.convbot(x) + self.resbot(x)
+        bottleneck = self.convbot(x)
         #decoder layer 6
         upsamp6 = self.upsample6(bottleneck)
         cropped6 = self.crop(upsamp6, block6)
