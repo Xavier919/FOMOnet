@@ -22,7 +22,7 @@ def get_loss(outputs, X, y, loss_function):
 
 def one_hot(seqs):
     tensors = []
-    mapping = {0:[0,0,0], 1:[1,0,0], 2:[0,1,0], 3:[0,0,1], 4:[0,0,0]}
+    mapping = {0:[0,0,0,0], 1:[1,0,0,0], 2:[0,1,0,0], 3:[0,0,1,0], 4:[0,0,0,1]}
     for seq in seqs:
         one_hot_vector = torch.tensor([mapping[int(val)] for val in seq.view(-1)])
         tensors.append(one_hot_vector.T)

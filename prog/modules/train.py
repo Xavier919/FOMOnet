@@ -14,10 +14,6 @@ from transcripts import Transcripts
 from utils import *
 import argparse
 
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-from torch.nn.parallel import DataParallel
-
 #create runs directory for curves visualization with tensorboard
 #shutil.rmtree(f'runs/', ignore_errors=True)
 #os.mkdir('runs')
