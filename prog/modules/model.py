@@ -110,13 +110,13 @@ class FOMOnet(nn.Module):
     @staticmethod
     def conv_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid'),
-            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='valid'),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             #nn.Dropout(p=p),
-            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='valid'),
-            nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='valid'),
+            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
+            nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             #nn.Dropout(p=p)
@@ -126,8 +126,8 @@ class FOMOnet(nn.Module):
     @staticmethod
     def res_block(in_channels, out_channels, k=5, p=0.5):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid'),
-            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='valid'),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             #nn.Dropout(p=p)
@@ -137,7 +137,7 @@ class FOMOnet(nn.Module):
     @staticmethod
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='valid'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels)
         )
