@@ -259,16 +259,24 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
-        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            if trx not in selected_trxps:
+            #if trx not in selected_trxps:
+            #    continue
+            if ensembl_trx[trx]['biotype'] != 'protein_coding':
+                continue
+            if not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
+                continue
+            if ensembl_trx[trx]['tsl'] not in ['tsl1', 'tsl2', 'tsl3']:
                 continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
