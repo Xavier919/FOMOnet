@@ -56,50 +56,50 @@ class FOMOnet(nn.Module):
     def forward(self, x):
         init_shape = x.shape[2]
         #encoder layer 1
-        block1 = self.conv1(x) + self.res1(x)
+        block1 = self.conv1(x)
         x = self.maxpool(block1)
         #encoder layer 2
-        block2 = self.conv2(x) + self.res2(x)
+        block2 = self.conv2(x)
         x = self.maxpool(block2)
         #encoder layer 3
-        block3 = self.conv3(x) + self.res3(x)
+        block3 = self.conv3(x)
         x = self.maxpool(block3)
         #encoder layer 4
-        block4 = self.conv4(x) + self.res4(x)
+        block4 = self.conv4(x) 
         x = self.maxpool(block4)
         #encoder layer 5
-        block5 = self.conv5(x) + self.res5(x)
+        block5 = self.conv5(x)
         x = self.maxpool(block5)
         #encoder layer 6
-        block6 = self.conv6(x) + self.res6(x)
+        block6 = self.conv6(x)
         x = self.maxpool(block6)
         #bottleneck layer
-        bottleneck = self.convbot(x) + self.resbot(x)
+        bottleneck = self.convbot(x) 
         #decoder layer 6
         upsamp6 = self.upsample6(bottleneck)
         cropped6 = self.crop(upsamp6, block6)
         cat6 = torch.cat((upsamp6, cropped6), 1)
-        x = self.dconv6(cat6) + self.dres6(cat6)
+        x = self.dconv6(cat6) 
         #decoder layer 5
         upsamp5 = self.upsample5(x)
         cropped5 = self.crop(upsamp5, block5)
         cat5 = torch.cat((upsamp5, cropped5), 1)
-        x = self.dconv5(cat5) + self.dres5(cat5)
+        x = self.dconv5(cat5) 
         #decoder layer 4
         upsamp4 = self.upsample4(x)
         cropped4 = self.crop(upsamp4, block4)
         cat4 = torch.cat((upsamp4, cropped4), 1)
-        x = self.dconv4(cat4) + self.dres4(cat4)
+        x = self.dconv4(cat4)
         #decoder layer 3
         upsamp3 = self.upsample3(x)
         cropped3 = self.crop(upsamp3, block3)
         cat3 = torch.cat((upsamp3, cropped3), 1)
-        x = self.dconv3(cat3) + self.dres3(cat3)
+        x = self.dconv3(cat3) 
         #decoder layer 2
         upsamp2 = self.upsample2(x)
         cropped2 = self.crop(upsamp2, block2)
         cat2 = torch.cat((upsamp2, cropped2), 1)
-        x = self.dconv2(cat2) + self.dres2(cat2)
+        x = self.dconv2(cat2) 
         #decoder layer 1 (final layer)
         out = self.dconv1(x)
         out = F.interpolate(out, init_shape)
