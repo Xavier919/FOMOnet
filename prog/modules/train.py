@@ -27,6 +27,8 @@ parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
 parser.add_argument('wd', type=float)
+parser.add_argument('dropout', type=int)
+parser.add_argument('kernel', type=int)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -35,6 +37,8 @@ if __name__ == "__main__":
     print(f'learning rate:{args.lr}\n')
     print(f'weight decay:{args.wd}\n')
     print(f'batch size:{args.batch_size}\n')
+    print(f'dropout:{args.dropout}\n')
+    print(f'kernel:{args.kernel}\n')
 
     #load train & test data
     X_train, y_train = pickle.load(open(args.train_split, 'rb'))
@@ -47,17 +51,15 @@ if __name__ == "__main__":
     #hyperparameters
     batch_size = args.batch_size
     epochs = args.epochs
-    lr = args.lr
-    wd = args.wd
 
     #create DataLoader object for train & test data
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=16)
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=16)
 
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet().cuda()
+    fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
 
-    optimizer = optim.Adam(fomonet.parameters(), lr, weight_decay=wd)
+    optimizer = optim.Adam(fomonet.parameters(), args.lr, weight_decay=args.wd)
     loss_function = nn.BCELoss(reduction='none').cuda()
 
     #train model
