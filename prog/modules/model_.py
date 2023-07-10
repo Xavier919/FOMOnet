@@ -109,12 +109,12 @@ class FOMOnet(nn.Module):
     @staticmethod
     def conv_block(in_channels, out_channels, k=5, p=0.25):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid', dilatation=2),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid', dilation=2),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='valid'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             nn.Dropout(p=p),
-            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='valid', dilatation=2),
+            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='valid', dilation=2),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='valid'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
@@ -125,7 +125,7 @@ class FOMOnet(nn.Module):
     @staticmethod
     def res_block(in_channels, out_channels, k=5, p=0.25):
         block = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid', dilatation=2),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='valid', dilation=2),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='valid'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
