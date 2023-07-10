@@ -90,7 +90,7 @@ class FOMOnet(nn.Module):
         upsamp4 = self.upsample4(x)
         cropped4 = self.crop(upsamp4, block4)
         cat4 = torch.cat((upsamp4, cropped4), 1)
-        x = self.dropout(self.dconv4(cat4) + self.dres4(cat4))
+        x = self.dropout(self.dconv4(cat4))
         #decoder layer 3
         upsamp3 = self.upsample3(x)
         cropped3 = self.crop(upsamp3, block3)
