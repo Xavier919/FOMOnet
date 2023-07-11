@@ -4,37 +4,32 @@ import random
 from torch.nn.utils.rnn import pad_sequence
 import numpy as np
 
-def pack_seqs(Xy):
-    seq1, seq2 = zip(*Xy)
-    max_len = max([x.shape[-1] for x in seq1])+500
-    seq1 = [torch.nn.functional.pad(x, pad=((max_len - x.shape[-1])//2, max_len - x.shape[-1] - (max_len - x.shape[-1])//2), mode='constant', value=0) for x in seq1]
-    seq2 = [torch.nn.functional.pad(y, pad=((max_len - y.shape[-1])//2, max_len - y.shape[-1] - (max_len - y.shape[-1])//2), mode='constant', value=0) for y in seq2]
-    X = pad_sequence([x for x in seq1], batch_first=True, padding_value=0)
-    y = pad_sequence([y for y in seq2], batch_first=True, padding_value=0)
-    return (X, y, one_hot(X))
+def pad_seqs(seqs, num_chan):
+    pad_seqs = []
+    max_len = max([x.shape[1] for x in seqs])
+    for seq in seqs:
+        diff_len = max_len - seq.shape[1]
+        padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)
+        pad_seq = torch.cat([padL, seq, padR], dim=1)
+        pad_seqs.append(pad_seq)
+    return torch.stack(pad_seqs, dim=1)
+
+def utility_fct(Xy):
+    X, y = Xy
+    X, y = pad_seqs(X, 4), pad_seqs(y, 1)
+    return (X, y)
 
 def get_loss(outputs, X, y, loss_function):
+    X = torch.stack([x[0] != 0 for x in X])
     loss = loss_function(outputs, y)
     loss_mask = X != 0
     loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
     mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=2).view(-1)).mean()
     return mean_loss
 
-def one_hot(seqs):
-    tensors = []
-    mapping = {0:[0,0,0,0], 1:[1,0,0,0], 2:[0,1,0,0], 3:[0,0,1,0], 4:[0,0,0,1]}
-    for seq in seqs:
-        one_hot_vector = torch.tensor([mapping[int(val)] for val in seq.view(-1)])
-        tensors.append(one_hot_vector.T)
-    return torch.stack(tensors).float()
-
 def map_seq(seq):
-    mapping = dict(zip("NATGC", range(0,5)))
-    return torch.Tensor([mapping[nt] for nt in seq])
-
-#def map_seq(seq):
-#    mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
-#    return torch.tensor([mapping[x] for x in seq]).T
+    mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
+    return torch.tensor([mapping[x] for x in seq]).T
 
 def map_cds(seq_tensor, start, stop, num):
     orf_loc = range(start, stop)
