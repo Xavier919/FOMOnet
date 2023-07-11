@@ -272,6 +272,6 @@ class Data:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
-                                'mapped_cds': seq_tensor,
+                                'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset

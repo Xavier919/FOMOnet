@@ -6,25 +6,25 @@ import numpy as np
 
 def pad_seqs(seqs, num_chan):
     pad_seqs = []
-    max_len = max([x.shape[1] for x in seqs])
+    max_len = max([x.shape[1] for x in seqs])+500
     for seq in seqs:
         diff_len = max_len - seq.shape[1]
         padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)
         pad_seq = torch.cat([padL, seq, padR], dim=1)
         pad_seqs.append(pad_seq)
-    return torch.stack(pad_seqs, dim=1)
+    return torch.stack(pad_seqs, dim=0)
 
 def utility_fct(Xy):
-    X, y = Xy
-    X, y = pad_seqs(X, 4), pad_seqs(y, 1)
+    seq1, seq2 = zip(*Xy)
+    X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
     return (X, y)
 
 def get_loss(outputs, X, y, loss_function):
-    X = torch.stack([x[0] != 0 for x in X])
     loss = loss_function(outputs, y)
-    loss_mask = X != 0
+    loss_mask = torch.stack([x[0] != 0 for x in X])
+    #loss_mask = X != 0
     loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
-    mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=2).view(-1)).mean()
+    mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=1).view(-1)).mean()
     return mean_loss
 
 def map_seq(seq):
