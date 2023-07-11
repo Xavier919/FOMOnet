@@ -32,10 +32,14 @@ def map_seq(seq):
     mapping = dict(zip("NATGC", range(0,5)))
     return torch.Tensor([mapping[nt] for nt in seq])
 
+#def map_seq(seq):
+#    mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
+#    return torch.tensor([mapping[x] for x in seq]).T
+
 def map_cds(seq_tensor, start, stop, num):
-    ORF_loc = range(start, stop)
+    orf_loc = range(start, stop)
     for pos, _ in enumerate(seq_tensor):
-        if pos in ORF_loc:
+        if pos in orf_loc:
             seq_tensor[pos] = num
     return seq_tensor
 
