@@ -16,7 +16,7 @@ import pandas as pd
 from modules.utils import *
 
 class Data:
-    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs, unique_pept):
+    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
         
         self.biotype_grouping = {
             'protein_coding': 'protein_coding',
@@ -96,7 +96,6 @@ class Data:
         self.ensembl95_trxps = pyfaidx.Fasta(trx_fasta)
         self.OP_prot_MS, self.OP_trx_altprot = self.get_altprot_info()
         self.sorfs = sorfs
-        self.unique_pept = unique_pept
 
     def get_op_trx(self):
         op_trx_accession = set()
@@ -258,7 +257,7 @@ class Data:
             selected_genes.append(gene)
         return selected_trxps, selected_genes
 
-    def dataset(self, ensembl_trx, trx_orfs):
+    def dataset(self, ensembl_trx, trx_orfs, dubious_prot):
         selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
@@ -268,7 +267,7 @@ class Data:
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
+                if orf.startswith('ENSP') and orf not in dubious_prot:
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
