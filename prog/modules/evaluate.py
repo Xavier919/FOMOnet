@@ -7,7 +7,7 @@ from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
-from tqdm.notebook import tqdm
+#from tqdm.notebook import tqdm
 from modules.utils import *
 
 def bin_pred(output, thresh):
@@ -67,7 +67,7 @@ def get_preds(model, X_test):
 
 def get_report(preds, y_test, trxps):
     report = dict()
-    for idx, out in tqdm(enumerate(preds)):
+    for idx, out in enumerate(preds):
         trx = trxps[idx]
         target = y_test[idx]
         pred = bin_pred(out, 0.5)
