@@ -164,8 +164,8 @@ class Data:
                     'gene_id':line["Gene stable ID"],
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
-                    'biotype': self.biotype_grouping[line["Gene type"]],
-                    'og_biotype': line["Gene type"],
+                    'biotype': self.biotype_grouping[line["Transcript type"]],
+                    'og_biotype': line["Transcript type"],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
