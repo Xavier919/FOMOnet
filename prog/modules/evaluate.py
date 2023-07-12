@@ -86,19 +86,18 @@ def get_preds(model, X_test):
         pad = torch.zeros(4,2500)
         X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X_).view(-1)
-        preds.append(out.cpu().detach().numpy())
+        preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach().numpy())
     return preds
 
-def get_report(preds, trxps):
+def get_report(preds, targets, trxps, ensembl_trx):
     report = dict()
-    for idx, attrs in tqdm(enumerate(preds)):
+    for idx, out in enumerate(preds):
         trx = trxps[idx]
-        seq, target, out = attrs[0], attrs[1], attrs[2]
-        out, target, sequence = crop_zeros(seq, out), crop_zeros(seq, target), crop_zeros(seq, seq)
-        out, target, sequence = torch.tensor(out), torch.tensor(target), torch.tensor(sequence)
-        preds = bin_pred(out, 0.5)
-        recall = recall_score(target, preds)
-        iou = iou_score(target, preds)
+        target = targets[idx]
+        sequence = ensembl_trx[trx]['sequence']
+        pred = bin_pred(out, 0.5)
+        recall = recall_score(target, pred)
+        iou = iou_score(target, pred)
         orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7, 0.25)
         report[trx] = {'out': out,
                        'mapped_seq':sequence,
