@@ -53,8 +53,8 @@ if __name__ == "__main__":
     epochs = args.epochs
 
     #create DataLoader object for train & test data
-    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=16)
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=pack_seqs, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=16)
+    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=16)
 
     #instantiate model, optimizer and loss function
     fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
@@ -68,10 +68,9 @@ if __name__ == "__main__":
         fomonet.train()
         losses = []
         for batch in train_loader:
-            X = batch[0].view(len(batch[0]),1,-1).cuda()
+            X = batch[0].view(len(batch[0]),4,-1).cuda()
             y = batch[1].view(len(batch[1]),-1).cuda()
-            X_one_hot = batch[2].view(len(batch[0]),4,-1).cuda()
-            outputs = fomonet(X_one_hot).view(len(batch[0]),-1)
+            outputs = fomonet(X).view(len(batch[0]),-1)
             fomonet.zero_grad()
             loss = get_loss(outputs, X, y, loss_function)
             loss.backward()
@@ -83,10 +82,9 @@ if __name__ == "__main__":
         fomonet.eval()
         test_losses = []
         for batch in test_loader:
-            X = batch[0].view(len(batch[0]),1,-1).cuda()
+            X = batch[0].view(len(batch[0]),4,-1).cuda()
             y = batch[1].view(len(batch[1]),-1).cuda()
-            X_one_hot = batch[2].view(len(batch[0]),4,-1).cuda()
-            outputs = fomonet(X_one_hot).view(len(batch[0]),-1)
+            outputs = fomonet(X).view(len(batch[0]),-1)
             test_loss = get_loss(outputs, X, y, loss_function)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
