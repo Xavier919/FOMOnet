@@ -5,7 +5,7 @@ from torch import nn
 import pickle
 import numpy as np
 #project specific imports
-from model import FOMOnet
+from model_ import FOMOnet
 from transcripts import Transcripts
 from utils import *
 from evaluate import *
