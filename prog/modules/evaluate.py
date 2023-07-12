@@ -7,8 +7,8 @@ from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
-#from tqdm.notebook import tqdm
-from utils import *
+from tqdm.notebook import tqdm
+from modules.utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -29,30 +29,6 @@ def recall_score(target, output):
     false_negatives = ((target == 1) & (output == 0)).sum()
     recall = true_positives / (true_positives + false_negatives + 1e-7)
     return recall.item()
-
-def accuracy_score(target, output):
-    target = target.flatten()
-    output = output.flatten()
-    true_positives = ((target == 1) & (output == 1)).sum()
-    true_negatives = ((target == 0) & (output == 0)).sum()
-    false_positives = ((target == 0) & (output == 1)).sum()
-    false_negatives = ((target == 1) & (output == 0)).sum()
-    accuracy = (true_positives + true_negatives) / (true_positives + true_negatives + false_positives + false_negatives + 1e-7)
-    return accuracy.item()
-
-def find_padding_limits(tensor):
-    first_non_zero = None
-    last_non_zero = None
-    for i, item in enumerate(tensor):
-        if item != 0:
-            if first_non_zero is None:
-                first_non_zero = i
-            last_non_zero = i+1
-    return first_non_zero, last_non_zero
-
-def crop_zeros(tensor1, tensor2):
-    start, stop = find_padding_limits(tensor1)
-    return tensor2[start:stop]
 
 def pr_curve(preds, target):
     preds = cat(preds)
@@ -91,7 +67,7 @@ def get_preds(model, X_test):
 
 def get_report(preds, y_test, trxps):
     report = dict()
-    for idx, out in enumerate(preds):
+    for idx, out in tqdm(enumerate(preds)):
         trx = trxps[idx]
         target = y_test[idx]
         pred = bin_pred(out, 0.5)
