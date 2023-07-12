@@ -13,7 +13,8 @@ from matplotlib import pyplot as plt
 from tqdm.notebook import tqdm
 import random
 import pandas as pd
-from utils import *
+import argparse
+from modules.utils import *
 
 class Data:
     def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
@@ -260,7 +261,7 @@ class Data:
     def dataset(self, ensembl_trx, trx_orfs):
         selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
-        for trx, orfs in trx_orfs.items():
+        for trx, orfs in tqdm(trx_orfs.items()):
             if trx not in selected_trxps:
                 continue
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])

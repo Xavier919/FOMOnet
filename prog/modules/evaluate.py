@@ -89,20 +89,18 @@ def get_preds(model, X_test):
         preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach().numpy())
     return preds
 
-def get_report(preds, targets, trxps, ensembl_trx):
+def get_report(preds, y_test, trxps):
     report = dict()
     for idx, out in enumerate(preds):
         trx = trxps[idx]
-        target = targets[idx]
-        sequence = ensembl_trx[trx]['sequence']
+        target = y_test[idx]
         pred = bin_pred(out, 0.5)
         recall = recall_score(target, pred)
         iou = iou_score(target, pred)
-        orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7, 0.25)
         report[trx] = {'out': out,
-                       'mapped_seq':sequence,
                        'mapped_cds': target,
                        'iou': iou,
-                       'recall': recall,
-                       'orfs_coord': orfs_coord}
+                       'recall': recall}
     return report
+
+#orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7, 0.25)

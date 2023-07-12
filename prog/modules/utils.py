@@ -43,7 +43,6 @@ def map_back(seq):
     mapping_back = {y:x for x,y in mapping.items()}
     return "".join([mapping_back[nt] for nt in seq.int().tolist() if nt != 0])
 
-
 def find_orfs(seq, keep_longest=False, nc_starts=False):
     if nc_starts:
         start_codons, stop_codons = ['ATG', 'TTG', 'GTG', 'CTG'], ['TGA', 'TAA', 'TAG']
