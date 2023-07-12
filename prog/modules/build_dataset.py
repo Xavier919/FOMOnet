@@ -240,7 +240,7 @@ class Data:
                 continue
             if not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
-            if len(ensembl_trx[trx]["sequence"]) > 30000 or ensembl_trx[trx]['tsl'] != 'tsl1':
+            if len(ensembl_trx[trx]["sequence"]) > 30000 or ensembl_trx[trx]['tsl'] not in ['tsl1', 'tsl2', 'tsl3']:
                 continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
@@ -257,7 +257,7 @@ class Data:
             selected_genes.append(gene)
         return selected_trxps, selected_genes
 
-    def dataset(self, ensembl_trx, trx_orfs, dubious_prot):
+    def dataset(self, ensembl_trx, trx_orfs):
         selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
@@ -267,7 +267,7 @@ class Data:
             seq_tensor = torch.zeros(1, seq_len).view(-1)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') and orf not in dubious_prot:
+                if attrs['MS'] >= 3 or attrs['TE'] >= 3 or orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': map_seq(seq),
