@@ -14,6 +14,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('data')
 parser.add_argument('model')
+parser.add_argument('kernel', type=int)
+parser.add_argument('dropout', type=float)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -22,8 +24,9 @@ if __name__ == "__main__":
     X_test, y_test = pickle.load(open(args.data, 'rb'))
 
     #instantiate model
-    fomonet = FOMOnet(num_channels=4)
-    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
+    fomonet = FOMOnet(p=args.dropout, k=args.kernel)
+    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
 
-    preds = get_preds(fomonet, X_test, y_test)
+    preds = get_preds(fomonet, X_test)
+
     pickle.dump(preds, open(f'preds_{args.tag}.pkl', 'wb'))

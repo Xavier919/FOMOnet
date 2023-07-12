@@ -79,15 +79,14 @@ def roc_curve(preds, target):
     plt.savefig('roc_curve.svg')
     plt.show()
 
-def get_preds(model, X_test, y_test):
+def get_preds(model, X_test):
     preds = []
     model.eval()
-    for X, y in list(zip(X_test, y_test)):
-        X_ = torch.cat([torch.zeros(2500),X,torch.zeros(2500)],dim=0)
-        y_ = torch.cat([torch.zeros(2500),y,torch.zeros(2500)],dim=0)
-        X_one_hot = one_hot(X_).T
-        outputs = model(X_one_hot).view(-1)
-        preds.append((X_.cpu().detach().numpy(), y_.cpu().detach().numpy(), outputs.cpu().detach().numpy()))
+    for X in X_test:
+        pad = torch.zeros(4,2500)
+        X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
+        out = model(X_).view(-1).cpu().detach().numpy()
+        preds.append(out)
     return preds
 
 def get_report(preds, trxps):
