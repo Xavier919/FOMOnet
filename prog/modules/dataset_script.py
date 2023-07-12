@@ -26,5 +26,5 @@ if __name__ == "__main__":
 
     train_split = (X_train,y_train)
     test_split = (X_test,y_test)
-    pickle.dump(train_split, open('data/train_split.pkl', 'wb'))
-    pickle.dump(test_split, open('data/test_split.pkl', 'wb'))
+    pickle.dump(train_split, open('train_split.pkl', 'wb'))
+    pickle.dump(test_split, open('test_split.pkl', 'wb'))
