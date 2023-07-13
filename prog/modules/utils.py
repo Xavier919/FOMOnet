@@ -32,10 +32,8 @@ def map_seq(seq):
     return torch.tensor([mapping[x] for x in seq]).T
 
 def find_orfs(seq, keep_longest=False, nc_starts=False):
-    if nc_starts:
-        start_codons, stop_codons = ['ATG', 'TTG', 'GTG', 'CTG'], ['TGA', 'TAA', 'TAG']
-    else:
-        start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
+    start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
+    if nc_starts: start_codons = ['ATG', 'TTG', 'GTG', 'CTG']
     frames = [0,1,2]
     orfs = []
     for frame in frames:

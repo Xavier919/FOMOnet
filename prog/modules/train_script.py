@@ -58,16 +58,14 @@ if __name__ == "__main__":
     epochs = args.epochs
 
     #create DataLoader object for train & test data
-    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=16)
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
     #instantiate model, optimizer and loss function
     #fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
 
     #optimizer = optim.Adam(fomonet.parameters(), args.lr, weight_decay=args.wd)
     #loss_function = nn.BCELoss(reduction='none').cuda()
-
-
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_gpus = torch.cuda.device_count()
@@ -76,9 +74,6 @@ if __name__ == "__main__":
         fomonet = nn.DataParallel(fomonet)
     optimizer = optim.Adam(fomonet.parameters(), lr=args.lr, weight_decay=args.wd)
     loss_function = nn.BCELoss(reduction='none').to(device)
-
-
-
 
     #train model
     best_model = 1.0
