@@ -44,6 +44,8 @@ if __name__ == "__main__":
     X_train, y_train = pickle.load(open(args.train_split, 'rb'))
     X_test, y_test = pickle.load(open(args.test_split, 'rb'))
 
+    X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
+
     #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)

@@ -92,19 +92,3 @@ def pred_orfs(out, seq, window_size=7, threshold=0.5):
             if (max_val - min_val >= threshold and max_index < min_index) or (len(seq) < stop+ws and any(i >= 0.5 for i in stop_window)):
                 pred_orfs.append((start, stop))
     return pred_orfs
-
-def find_coordinates(orf_seq, trx_seq):
-    length = len(orf_seq)
-    start = trx_seq.find(orf_seq)
-    stop = start+length
-    return start, stop
-
-def find_cds(y):
-    in_CDS = []
-    for target in enumerate(y.int()):
-        if target[1] == 1:
-            in_CDS.append(target[0])
-    coordinates = (0, 0)
-    if len(in_CDS) != 0:
-        coordinates = (in_CDS[0], in_CDS[-1]+1)
-    return coordinates

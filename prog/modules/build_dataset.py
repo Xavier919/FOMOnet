@@ -264,20 +264,20 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             #if trx not in selected_trxps:
             #    continue
-            if ensembl_trx[trx]["biotype"] != "protein_coding":
-                continue
-            if not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
-                continue
-            if len(ensembl_trx[trx]["sequence"]) > 30000:
-                continue
+            keep = 'n'
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            seq_tensor = torch.zeros(1, seq_len).view(-1)
+            if ensembl_trx[trx]['biotype'] != 'protein_coding' or seq_len > 15000:
+                continue
+            seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if attrs['MS'] >= 2 or attrs['TE'] >= 2 or orf.startswith('ENSP'):
+                if orf.startswith('ENSP'):
                     seq_tensor = map_cds(seq_tensor, start, stop, 1)
-            if 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': map_seq(seq),
+                    keep = 'y'
+                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
+                    seq_tensor = map_cds(seq_tensor, start, stop, 1)
+            if 1 in seq_tensor and keep == 'y':
+                dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
