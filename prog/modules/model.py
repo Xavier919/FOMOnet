@@ -18,8 +18,10 @@ class FOMOnet(nn.Module):
         self.conv4 = self.conv_block(128, 256, k=k)
         self.conv5 = self.conv_block(256, 512, k=k)
         self.conv6 = self.conv_block(512, 1024, k=k)
-        self.convbot = self.conv_block(1024, 1024, k=k)
+        self.conv7 = self.conv_block(1024, 2048, k=k)
+        self.convbot = self.conv_block(2048, 2048, k=k)
         #decoder convolutional blocks
+        self.dconv7 = self.conv_block(2048, 1024, k=k)
         self.dconv6 = self.conv_block(1024, 512, k=k)
         self.dconv5 = self.conv_block(512, 256, k=k)
         self.dconv4 = self.conv_block(256, 128, k=k)
@@ -27,6 +29,7 @@ class FOMOnet(nn.Module):
         self.dconv2 = self.conv_block(64, 32, k=k)
         self.dconv1 = self.final_block(32, 1, k=k)
         #decoder upsampling operations
+        self.upsample7 = nn.ConvTranspose1d(in_channels=2048, out_channels=1024, kernel_size=2, stride=2)
         self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
@@ -60,8 +63,16 @@ class FOMOnet(nn.Module):
         #encoder layer 6
         block6 = self.conv6(x) 
         x = self.dropout(self.maxpool(block6))
+        #encoder layer 7
+        block7 = self.conv7(x) 
+        x = self.dropout(self.maxpool(block7))
         #bottleneck layer
         bottleneck = self.dropout(self.convbot(x))
+        #decoder layer 7
+        upsamp7 = self.upsample7(bottleneck)
+        cropped7 = self.crop(upsamp7, block7)
+        cat7 = torch.cat((upsamp7, cropped7), 1)
+        x = self.dropout(self.dconv7(cat7))
         #decoder layer 6
         upsamp6 = self.upsample6(bottleneck)
         cropped6 = self.crop(upsamp6, block6)
@@ -96,14 +107,14 @@ class FOMOnet(nn.Module):
     @staticmethod
     def conv_block(in_channels, out_channels, k=5):
         block = nn.Sequential(
-            #nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
-            #nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
-            nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            #nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
-            #nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
-            #nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.Conv1d(out_channels, out_channels, kernel_size=k, padding='same'),
+            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
+            nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
+            #nn.Conv1d(out_channels, out_channels, kernel_size=k, padding='same'),
             nn.PReLU(),
             nn.BatchNorm1d(out_channels),
         )
