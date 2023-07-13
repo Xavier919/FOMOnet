@@ -31,18 +31,6 @@ def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
 
-def map_cds(seq_tensor, start, stop, num):
-    orf_loc = range(start, stop)
-    for pos, _ in enumerate(seq_tensor):
-        if pos in orf_loc:
-            seq_tensor[pos] = num
-    return seq_tensor
-
-def map_back(seq):
-    mapping = dict(zip("NATGC", range(0,5)))
-    mapping_back = {y:x for x,y in mapping.items()}
-    return "".join([mapping_back[nt] for nt in seq.int().tolist() if nt != 0])
-
 def find_orfs(seq, keep_longest=False, nc_starts=False):
     if nc_starts:
         start_codons, stop_codons = ['ATG', 'TTG', 'GTG', 'CTG'], ['TGA', 'TAA', 'TAG']
