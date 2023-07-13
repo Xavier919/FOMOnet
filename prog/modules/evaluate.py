@@ -8,7 +8,7 @@ from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
 #from tqdm.notebook import tqdm
-from modules.utils import *
+from utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
