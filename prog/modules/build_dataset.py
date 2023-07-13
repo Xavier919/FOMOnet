@@ -264,20 +264,20 @@ class Data:
         for trx, orfs in tqdm(trx_orfs.items()):
             #if trx not in selected_trxps:
             #    continue
-            keep = 'n'
             seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
-            if ensembl_trx[trx]['biotype'] != 'protein_coding' or seq_len > 15000 or ensembl_trx[trx]['tsl'] not in ['tsl1', 'tsl2', 'tsl3']:
+            if ensembl_trx[trx]['biotype'] not in ['protein_coding', 'processed_transcript', 'pseudogene'] or seq_len > 15000:
+                continue
+            if len(find_orfs(seq)) != len(ensembl_trx[trx]['orf_accessions']):
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
-                    keep = 'y'
                 elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
             trx_coverage = torch.count_nonzero(seq_tensor)/seq_len
-            if 1 in seq_tensor and keep == 'y' and trx_coverage <= 90:
+            if 1 in seq_tensor and trx_coverage <= 0.9:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name']}

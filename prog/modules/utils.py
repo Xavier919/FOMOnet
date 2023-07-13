@@ -31,7 +31,7 @@ def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
 
-def find_orfs(seq, keep_longest=False, nc_starts=False):
+def find_orfs(seq, keep_longest=True, nc_starts=False):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
     if nc_starts: start_codons = ['ATG', 'TTG', 'GTG', 'CTG']
     frames = [0,1,2]
@@ -59,7 +59,7 @@ def find_orfs(seq, keep_longest=False, nc_starts=False):
 def pred_orfs(out, seq, window_size=7, threshold=0.5):
     pred_orfs = []
     ws = window_size
-    for start, stop in find_orfs(seq, keep_longest=False, nc_starts=True):
+    for start, stop in find_orfs(seq):
         if start < ws:
             start_window = out[:start+ws]
         else:
