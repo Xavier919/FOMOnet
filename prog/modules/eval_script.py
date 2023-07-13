@@ -98,6 +98,8 @@ if __name__ == "__main__":
 
     X_test, y_test = pickle.load(open(args.data, 'rb'))
 
+    X_test = [map_seq(x) for x in X_test]
+
     trxps = pickle.load(open(args.trxps, 'rb'))
     _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.1, random_state=42)
 

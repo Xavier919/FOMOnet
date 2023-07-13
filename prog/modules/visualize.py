@@ -22,9 +22,12 @@ def map_preds(report, trx_orfs, ensembl_trx, coordinates, n_display=5):
             print('recall:', report[trx]['recall']), print('iou:', report[trx]['iou'])
             print('biotype:', ensembl_trx[trx]['biotype'])
             print('gene:', ensembl_trx[trx]['gene_name'])
-            print('predicted orfs:', coordinates[idx])
+            print('predicted orfs:', coordinates[trx])
+            targets = []
             orfs = dict()
             for orf, attrs in trx_orfs[trx].items():
+                if attrs['MS'] >= 1 or attrs['TE'] >= 1 or orf.startswith('ENSP'):
+                    targets.append((attrs['start'], attrs['stop']))
                 orfs[orf] = {'start':attrs['start'],
                             'stop':attrs['stop'],
                             'MS':attrs['MS'],
@@ -33,18 +36,6 @@ def map_preds(report, trx_orfs, ensembl_trx, coordinates, n_display=5):
             orfs = {k:v for k,v in sorted(orfs.items(), key=lambda item:item[1]['start'])}
             for key, value in orfs.items():
                 print(key, ' : ', value)
-        map_pred(report[trx]['out'], coordinates[idx])
-        if n==n_display:
-            break
-
-def map_preds_os(report, dataset, n_display=5):
-    n=0
-    trxps = [x for x in dataset.keys()]
-    for trx, info in report.items():
-        n+=1
-        trx_ = trxps[trx]
-        print(trx_), print('recall:', info['recall']), print('iou:', info['iou'])
-        print(find_orfs(map_back(dataset[trx_]['mapped_seq'])))
-        map_pred(info['out'], info['mapped_cds'])
+        map_pred(report[trx]['out'], targets)
         if n==n_display:
             break
