@@ -8,7 +8,7 @@ from sklearn.metrics import recall_score
 from torch.nn.utils.rnn import pad_sequence
 import torch
 #from tqdm.notebook import tqdm
-from utils import *
+from modules.utils import *
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -59,7 +59,7 @@ def get_preds(model, X_test):
     preds = []
     model.eval()
     for X in X_test:
-        pad = torch.zeros(4,2500)
+        pad = torch.zeros(4,5000)
         X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X_).view(-1)
         preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
@@ -79,4 +79,4 @@ def get_report(preds, y_test, trxps):
                        'recall': recall}
     return report
 
-#orfs_coord = pred_orfs(out.detach().numpy(), map_back(sequence), 7, 0.25)
+#orfs_coord = pred_orfs(out, map_back(sequence), 7, 0.25)

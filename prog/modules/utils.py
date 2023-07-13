@@ -73,7 +73,7 @@ def find_orfs(seq, keep_longest=False, nc_starts=False):
 def pred_orfs(out, seq, window_size=7, threshold=0.5):
     pred_orfs = []
     ws = window_size
-    for start, stop in find_orfs(seq):
+    for start, stop in find_orfs(seq, keep_longest=True):
         if start < ws:
             start_window = out[:start+ws]
         else:
