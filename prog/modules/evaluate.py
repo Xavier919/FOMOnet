@@ -62,7 +62,7 @@ def get_preds(model, X_test):
         pad = torch.zeros(4,2500)
         X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X_).view(-1)
-        preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach().numpy())
+        preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
     return preds
 
 def get_report(preds, y_test, trxps):
