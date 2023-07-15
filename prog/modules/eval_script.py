@@ -104,7 +104,7 @@ if __name__ == "__main__":
     trxps = pickle.load(open(args.trxps, 'rb'))
     _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.1, random_state=42)
 
-    fomonet = FOMOnet(k=args.kernel, d=args.dropout)
+    fomonet = FOMOnet(k=args.kernel, p=args.dropout)
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
 
     preds = get_preds(fomonet, X_test)
