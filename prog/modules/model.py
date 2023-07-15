@@ -11,7 +11,6 @@ class FOMOnet(nn.Module):
         #encoder pooling operation
         self.maxpool = nn.MaxPool1d(kernel_size=2)
         self.dropout = nn.Dropout(p=p)
-        self.dropout_ = nn.Dropout(p=0.2)
         #encoder convolutional blocks
         self.conv1 = self.conv_block(4, 32, k=k)
         self.conv2 = self.conv_block(32, 64, k=k)
@@ -45,7 +44,7 @@ class FOMOnet(nn.Module):
         init_shape = x.shape[2]
         #encoder layer 1
         block1 = self.conv1(x) 
-        x = self.dropout_(self.maxpool(block1))
+        x = self.dropout(self.maxpool(block1))
         #encoder layer 2
         block2 = self.conv2(x) 
         x = self.dropout(self.maxpool(block2))
