@@ -2,83 +2,165 @@ import torch
 import torch.nn as nn
 import torchvision
 from torch.nn import functional as F
-from modules.model import FOMOnet
 
-class LRP_FOMOnet(FOMOnet):
+class FOMOnet(nn.Module):
 
-    def __init__(self, num_channels=4):
-        super().__init__(num_channels)
+    def __init__(self, p=0.5, k=5):
+        super().__init__()
 
-    def lrp(self, x):
-        # Forward pass
-        out = self.forward(x)
-        print(out)
+        #encoder pooling operation
+        self.maxpool = nn.MaxPool1d(kernel_size=2)
+        self.dropout = nn.Dropout(p=p)
+        self.dropout_ = nn.Dropout(p=0.2)
+        #encoder convolutional blocks
+        self.conv1 = self.conv_block(4, 32, k=k)
+        self.conv2 = self.conv_block(32, 64, k=k)
+        self.conv3 = self.conv_block(64, 128, k=k)
+        self.conv4 = self.conv_block(128, 256, k=k)
+        self.conv5 = self.conv_block(256, 512, k=k)
+        self.conv6 = self.conv_block(512, 1024, k=k)
+        self.convbot = self.conv_block(1024, 1024, k=k)
+        #decoder convolutional blocks
+        self.dconv6 = self.conv_block(1024, 512, k=k)
+        self.dconv5 = self.conv_block(512, 256, k=k)
+        self.dconv4 = self.conv_block(256, 128, k=k)
+        self.dconv3 = self.conv_block(128, 64, k=k)
+        self.dconv2 = self.conv_block(64, 32, k=k)
+        self.dconv1 = self.final_block(32, 1, k=k)
+        #decoder upsampling operations
+        self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
+        self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
+        self.upsample4 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
+        self.upsample3 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=2, stride=2)
+        self.upsample2 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
+        #output function
+        self.sigmoid = nn.Sigmoid()
 
-        # Initialize relevance scores with the output
-        relevance = out.clone()
-        print(relevance)
+    def crop(self, x, enc_ftrs):
+        chs, dims = x.shape[1:]
+        enc_ftrs = torchvision.transforms.CenterCrop([chs, dims])(enc_ftrs)
+        return enc_ftrs
 
-        # Layer-wise relevance propagation
-        relevance = self.lrp_backward(relevance, self.dconv1)
-        relevance = self.lrp_backward(relevance, self.dconv2)
-        relevance = self.lrp_backward(relevance, self.dconv3)
-        relevance = self.lrp_backward(relevance, self.dconv4)
-        relevance = self.lrp_backward(relevance, self.dconv5)
-        relevance = self.lrp_backward(relevance, self.dconv6)
+    def forward(self, x):
+        init_shape = x.shape[2]
+        #encoder layer 1
+        block1 = self.conv1(x) 
+        x = self.dropout_(self.maxpool(block1))
+        #encoder layer 2
+        block2 = self.conv2(x) 
+        x = self.dropout(self.maxpool(block2))
+        #encoder layer 3
+        block3 = self.conv3(x) 
+        x = self.dropout(self.maxpool(block3))
+        #encoder layer 4
+        block4 = self.conv4(x) 
+        x = self.dropout(self.maxpool(block4))
+        #encoder layer 5
+        block5 = self.conv5(x) 
+        x = self.dropout(self.maxpool(block5))
+        #encoder layer 6
+        block6 = self.conv6(x) 
+        x = self.dropout(self.maxpool(block6))
+        #bottleneck layer
+        bottleneck = self.dropout(self.convbot(x))
+        #decoder layer 6
+        upsamp6 = self.upsample6(bottleneck)
+        cropped6 = self.crop(upsamp6, block6)
+        cat6 = torch.cat((upsamp6, cropped6), 1)
+        x = self.dropout(self.dconv6(cat6))
+        #decoder layer 5
+        upsamp5 = self.upsample5(x)
+        cropped5 = self.crop(upsamp5, block5)
+        cat5 = torch.cat((upsamp5, cropped5), 1)
+        x = self.dropout(self.dconv5(cat5))
+        #decoder layer 4
+        upsamp4 = self.upsample4(x)
+        cropped4 = self.crop(upsamp4, block4)
+        cat4 = torch.cat((upsamp4, cropped4), 1)
+        x = self.dropout(self.dconv4(cat4))
+        #decoder layer 3
+        upsamp3 = self.upsample3(x)
+        cropped3 = self.crop(upsamp3, block3)
+        cat3 = torch.cat((upsamp3, cropped3), 1)
+        x = self.dropout(self.dconv3(cat3))
+        #decoder layer 2
+        upsamp2 = self.upsample2(x)
+        cropped2 = self.crop(upsamp2, block2)
+        cat2 = torch.cat((upsamp2, cropped2), 1)
+        x = self.dropout(self.dconv2(cat2))
+        #decoder layer 1 (final layer)
+        out = self.dconv1(x)
+        out = F.interpolate(out, init_shape)
 
-        # Return relevance scores
-        return relevance
+        return self.sigmoid(out), out
 
-    def lrp_backward(self, relevance, layer):
-        relevance = self.lrp_linear(layer, relevance)
-        return relevance
+    @staticmethod
+    def conv_block(in_channels, out_channels, k=5):
+        block = nn.Sequential(
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            nn.PReLU(),
+            nn.BatchNorm1d(out_channels),
+            nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
+            nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
+            nn.PReLU(),
+            nn.BatchNorm1d(out_channels),
+        )
+        return block
 
-    def lrp_linear(self, layer, relevance):
-        layer_out = layer(relevance)
-        layer_in = layer.out_channels
+    @staticmethod
+    def final_block(in_channels, out_channels, k=1):
+        block = nn.Sequential(
+            nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
+            nn.PReLU(),
+            nn.BatchNorm1d(out_channels)
+        )
+        return block
+    
+    def layerwise_relevance_propagation(self, x):
+        self.eval()
 
-        if isinstance(layer, nn.Conv1d):
-            layer_weights = layer.weight
-            layer_bias = layer.bias
-            layer_stride = layer.stride[0]
-            layer_padding = layer.padding[0]
+        # Forward pass to obtain predictions and intermediate output
+        predictions, out = self.forward(x)
 
-            relevance = self.lrp_conv1d(layer_out, relevance, layer_weights, layer_bias, layer_stride, layer_padding)
-        elif isinstance(layer, nn.Linear):
-            layer_weights = layer.weight
-            layer_bias = layer.bias
+        # Initialize relevance map
+        relevance_map = torch.zeros_like(out)
 
-            relevance = self.lrp_linear_layer(layer_out, relevance, layer_weights, layer_bias)
+        # Compute element-wise gradients for the intermediate output
+        out_grads = torch.autograd.grad(predictions, out, torch.ones_like(predictions), retain_graph=True)[0]
 
-        return relevance
+        # Backward pass through the decoder layers
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv1[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map = self.upsample2(relevance_map[:, :, 1:])  # Backward through the upsampling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv2[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map = self.upsample3(relevance_map[:, :, 1:])  # Backward through the upsampling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv3[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map = self.upsample4(relevance_map[:, :, 1:])  # Backward through the upsampling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv4[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map = self.upsample5(relevance_map[:, :, 1:])  # Backward through the upsampling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv5[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map = self.upsample6(relevance_map[:, :, 1:])  # Backward through the upsampling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.dconv6[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
 
-    def lrp_conv1d(self, layer_out, relevance, weights, bias, stride, padding):
-        _, _, in_length = relevance.size()
-        _, _, out_length = layer_out.size()
+        # Backward pass through the encoder layers
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.convbot[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv6[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv5[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv4[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv3[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv2[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
+        relevance_map += self.maxpool.backward(relevance_map)  # Backward through the max pooling operation
+        relevance_map = torch.autograd.grad(outputs=out, inputs=self.conv1[0].weight, grad_outputs=relevance_map, retain_graph=True)[0]
 
-        relevance_padded = F.pad(relevance, (padding, padding))
-        weights_flipped = torch.flip(weights, dims=[2])
+        return relevance_map
 
-        unfold_relevance = F.unfold(relevance_padded, (weights.size(2),), stride=stride)
-        unfold_relevance = unfold_relevance.view(-1, in_length, weights.size(2))
 
-        unfold_relevance *= weights_flipped.unsqueeze(0)
-        unfold_relevance = unfold_relevance.sum(dim=2)
 
-        relevance = F.fold(unfold_relevance, (out_length,), (1,), stride=stride)
 
-        if bias is not None:
-            relevance += bias.unsqueeze(0).unsqueeze(-1)
 
-        return relevance
 
-    def lrp_linear_layer(self, layer_out, relevance, weights, bias):
-        relevance = relevance / (layer_out + 1e-9)  # Add epsilon to avoid division by zero
-
-        relevance = relevance.matmul(weights)
-        relevance = relevance.unsqueeze(-1)
-
-        if bias is not None:
-            relevance += bias.unsqueeze(0).unsqueeze(-1)
-
-        return relevance
