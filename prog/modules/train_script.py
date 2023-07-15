@@ -62,18 +62,18 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
     #instantiate model, optimizer and loss function
-    #fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
+    fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
 
-    #optimizer = optim.Adam(fomonet.parameters(), args.lr, weight_decay=args.wd)
-    #loss_function = nn.BCELoss(reduction='none').cuda()
+    optimizer = optim.Adam(fomonet.parameters(), args.lr, weight_decay=args.wd)
+    loss_function = nn.BCELoss(reduction='none').cuda()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    num_gpus = torch.cuda.device_count()
-    fomonet = FOMOnet(p=args.dropout, k=args.kernel).to(device)
-    if num_gpus > 1:
-        fomonet = nn.DataParallel(fomonet)
-    optimizer = optim.Adam(fomonet.parameters(), lr=args.lr, weight_decay=args.wd)
-    loss_function = nn.BCELoss(reduction='none').to(device)
+    #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #num_gpus = torch.cuda.device_count()
+    #fomonet = FOMOnet(p=args.dropout, k=args.kernel).to(device)
+    #if num_gpus > 1:
+    #    fomonet = nn.DataParallel(fomonet)
+    #optimizer = optim.Adam(fomonet.parameters(), lr=args.lr, weight_decay=args.wd)
+    #loss_function = nn.BCELoss(reduction='none').to(device)
 
     #train model
     best_model = 1.0
