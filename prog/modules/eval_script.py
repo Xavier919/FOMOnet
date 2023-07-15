@@ -102,13 +102,8 @@ if __name__ == "__main__":
     trxps = pickle.load(open(args.trxps, 'rb'))
     _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.1, random_state=42)
 
-    #fomonet = FOMOnet(k=args.kernel)
-    #fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
-
     fomonet = FOMOnet(k=args.kernel)
-    state_dict = torch.load(args.model, map_location=torch.device('cuda'))
-    state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}  # Remove "module." prefix
-    fomonet.load_state_dict(state_dict)
+    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
 
     preds = get_preds(fomonet, X_test)
 
