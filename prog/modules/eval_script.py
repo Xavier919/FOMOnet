@@ -100,7 +100,7 @@ if __name__ == "__main__":
     X_test = [map_seq(x) for x in X_test]
 
     trxps = pickle.load(open(args.trxps, 'rb'))
-    _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.1, random_state=42)
+    _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.2, random_state=42)
 
     fomonet = FOMOnet(k=args.kernel)
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
