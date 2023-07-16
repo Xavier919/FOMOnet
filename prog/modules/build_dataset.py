@@ -265,7 +265,7 @@ class Data:
             #if trx not in selected_trxps:
             #    continue
             seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            if biotype not in ['protein_coding'] or seq_len > 30000:
+            if biotype != 'protein_coding' or seq_len > 30000:
                 continue
             if len(find_orfs(seq)) != len(ensembl_trx[trx]['orf_accessions']):
                 continue
@@ -282,27 +282,21 @@ class Data:
                                 'gene_name': ensembl_trx[trx]['gene_name']}
         return dataset
     
-    def nc_dataset(self, ensembl_trx, trx_orfs):
+    def alt_dataset(self, ensembl_trx, trx_orfs):
         _, selected_genes = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype, gene = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['gene_name']
-            if gene in selected_genes:
-                continue
-            if biotype != 'processed_transcript' or seq_len > 30000:
-                continue
-            if len(find_orfs(seq)) != len(ensembl_trx[trx]['orf_accessions']):
+            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
+            if trx in selected_genes or biotype == 'nmd':
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
-                elif attrs['MS'] >= 1 or attrs['TE'] >= 1:
+                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
-                continue
-            else:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name']}
