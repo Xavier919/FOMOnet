@@ -31,8 +31,8 @@ def get_preds(model, X_test):
         out = model(X_).view(-1)
         preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
         cnt += 1
-        if idx == cnt + 1000:
-            print(idx), print('/'), print(len(trxps))
+        if idx == 100:
+            print(f'{idx}/{len(trxps)}')
     return preds
 
 def semi_supervised_dataset(preds, seqs, trxps):
@@ -56,7 +56,10 @@ if __name__ == "__main__":
     
     X_alt = pickle.load(open(args.X_alt, 'rb'))
 
-    mapped_X_alt = [map_seq(x) for x in X_alt]
+    mapped_X_alt = []
+    for x in X_alt:
+        mapped = map_seq(x)
+        mapped_X_alt.append(mapped)
 
     trxps = pickle.load(open(args.trxps, 'rb'))
 
