@@ -44,7 +44,7 @@ def semi_supervised_dataset(preds, seqs, trxps):
             seq_tensor[start:stop] = 1
         if 1 in seq_tensor:
             ss_dataset[trx] = {'mapped_seq': seq,
-                               'mapped_cds': seq_tensor}
+                               'mapped_cds': seq_tensor.view(1,-1)}
     return ss_dataset
 
 
