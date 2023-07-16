@@ -18,7 +18,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('Xy_train')
 parser.add_argument('Xy_test')
-parser.add_argument('Xy_alt')
+parser.add_argument('X_alt')
 parser.add_argument('trxps')
 parser.add_argument('model')
 parser.add_argument('kernel', type=int)
@@ -27,11 +27,15 @@ args = parser.parse_args()
 def get_preds(model, X_test):
     preds = []
     model.eval()
-    for X in X_test:
+    cnt = 0
+    for idx, X in enumerate(X_test):
         pad = torch.zeros(4,5000)
         X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X_).view(-1)
         preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
+        cnt += 1
+        if idx == cnt + 1000:
+            print(idx), print('/'), print(len(trxps))
     return preds
 
 def semi_supervised_dataset(preds, seqs, trxps):
@@ -46,8 +50,6 @@ def semi_supervised_dataset(preds, seqs, trxps):
         if 1 in seq_tensor:
             ss_dataset[trx] = {'mapped_seq': seq,
                                'mapped_cds': seq_tensor.view(1,-1)}
-        if idx == cnt + 1000:
-            print(idx), print('/'), print(len(trxps))
     return ss_dataset
 
 
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
     X_test, y_test = pickle.load(open(args.Xy_test, 'rb'))
     
-    X_alt = pickle.load(open(args.Xy_alt, 'rb'))
+    X_alt = pickle.load(open(args.X_alt, 'rb'))
 
     mapped_X_alt = [map_seq(x) for x in X_alt]
 
