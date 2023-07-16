@@ -36,6 +36,7 @@ def get_preds(model, X_test):
 
 def semi_supervised_dataset(preds, seqs, trxps):
     ss_dataset = dict()
+    cnt = 0
     for idx, out in enumerate(preds):
         trx, seq = trxps[idx], seqs[idx]
         seq_tensor = torch.zeros(len(seq))
@@ -45,6 +46,8 @@ def semi_supervised_dataset(preds, seqs, trxps):
         if 1 in seq_tensor:
             ss_dataset[trx] = {'mapped_seq': seq,
                                'mapped_cds': seq_tensor.view(1,-1)}
+        if idx == cnt + 1000:
+            print(idx), print('/'), print(len(trxps))
     return ss_dataset
 
 
