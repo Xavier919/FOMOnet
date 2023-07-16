@@ -3,10 +3,7 @@ import torch
 import pickle
 from sklearn.model_selection import train_test_split
 import numpy as np
-from matplotlib import pyplot as plt
 from torch import cat
-from sklearn import metrics
-from torchmetrics import PrecisionRecallCurve
 from sklearn.metrics import auc
 from sklearn.metrics import recall_score
 import torch
@@ -40,11 +37,10 @@ def get_preds(model, X_test):
 
 def semi_supervised_dataset(preds, seqs, trxps):
     ss_dataset = dict()
-    cnt = 0
     for idx, out in enumerate(preds):
         trx, seq = trxps[idx], seqs[idx]
         seq_tensor = torch.zeros(len(seq))
-        coordinates = pred_orfs(out, seq, window_size=7, threshold=0.25)
+        coordinates = pred_orfs(out.numpy(), seq, window_size=7, threshold=0.25)
         for start, stop in coordinates:
             seq_tensor[start:stop] = 1
         if 1 in seq_tensor:
@@ -56,7 +52,7 @@ def semi_supervised_dataset(preds, seqs, trxps):
 if __name__ == "__main__":
 
     X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
-    X_test, y_test = pickle.load(open(args.Xy_test, 'rb'))
+    #X_test, y_test = pickle.load(open(args.Xy_test, 'rb'))
     
     X_alt = pickle.load(open(args.X_alt, 'rb'))
 
