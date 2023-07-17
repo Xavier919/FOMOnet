@@ -14,7 +14,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ss_dataset')
-#parser.add_argument('Xy_train')
+parser.add_argument('Xy_train')
 #parser.add_argument('Xy_test')
 #parser.add_argument('X_alt')
 #parser.add_argument('trxps')
@@ -48,7 +48,7 @@ def semi_supervised_dataset(preds, seqs, trxps):
 
 if __name__ == "__main__":
 
-    #X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
+    X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
     
     #X_alt = pickle.load(open(args.X_alt, 'rb'))
 
