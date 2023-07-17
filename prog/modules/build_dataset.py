@@ -243,6 +243,8 @@ class Data:
                 continue
             if len(ensembl_trx[trx]["sequence"]) > 30000:
                 continue
+            if ensembl_trx[trx]["tsl"] not in ['tsl1', 'tsl2', 'tsl3']:
+                continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
                 if gene not in gene_trxps:
@@ -259,22 +261,18 @@ class Data:
         return selected_trxps, selected_genes
 
     def dataset(self, ensembl_trx, trx_orfs):
-        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            #if trx not in selected_trxps:
-            #    continue
             seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            if biotype != 'protein_coding' or seq_len > 30000:
+            if trx not in selected_trxps:
                 continue
-            if len(find_orfs(seq)) != len(ensembl_trx[trx]['orf_accessions']):
+            if biotype != 'protein_coding' or seq_len > 30000:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
-                    seq_tensor[start:stop] = 1
-                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
@@ -286,8 +284,8 @@ class Data:
         _, selected_genes = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            if trx in selected_genes or biotype == 'nmd':
+            seq, seq_len, biotype, gene = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['gene_name']
+            if gene in selected_genes or biotype == 'nmd':
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():

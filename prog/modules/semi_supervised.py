@@ -13,19 +13,18 @@ from utils import *
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('ss_dataset')
 parser.add_argument('Xy_train')
-#parser.add_argument('Xy_test')
-#parser.add_argument('X_alt')
-#parser.add_argument('trxps')
-#parser.add_argument('model')
-#parser.add_argument('kernel', type=int)
+parser.add_argument('Xy_test')
+parser.add_argument('X_alt')
+parser.add_argument('trxps')
+parser.add_argument('model')
+parser.add_argument('kernel', type=int)
 args = parser.parse_args()
 
 def get_preds(model, X_test):
     preds = []
     model.eval()
-    for idx, X in enumerate(X_test):
+    for X in X_test:
         pad = torch.zeros(4,5000)
         X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X_).view(-1)
@@ -50,27 +49,25 @@ if __name__ == "__main__":
 
     X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
     
-    #X_alt = pickle.load(open(args.X_alt, 'rb'))
+    X_alt = pickle.load(open(args.X_alt, 'rb'))
 
-    #mapped_X_alt = []
-    #for x in X_alt:
-    #    mapped = map_seq(x)
-    #    mapped_X_alt.append(mapped)
+    mapped_X_alt = []
+    for x in X_alt:
+        mapped = map_seq(x)
+        mapped_X_alt.append(mapped)
 
-    #trxps = pickle.load(open(args.trxps, 'rb'))
+    trxps = pickle.load(open(args.trxps, 'rb'))
 
-    #fomonet = FOMOnet(k=args.kernel)
-    #fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
+    fomonet = FOMOnet(k=args.kernel)
+    fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
 
-    #preds = get_preds(fomonet, mapped_X_alt)
-    #ss_dataset = semi_supervised_dataset(preds, X_alt, trxps)
+    preds = get_preds(fomonet, mapped_X_alt)
+    ss_dataset = semi_supervised_dataset(preds, X_alt, trxps)
 
-    #pickle.dump(preds, open('ss_preds.pkl', 'wb'))
-    #pickle.dump(ss_dataset, open('ss_dataset.pkl', 'wb'))
+    pickle.dump(preds, open('ss_preds.pkl', 'wb'))
+    pickle.dump(ss_dataset, open('ss_dataset.pkl', 'wb'))
 
     ### new dataset
-
-    ss_dataset = pickle.load(open(args.ss_dataset, 'rb'))
 
     X_alt = [x['mapped_seq'] for x in ss_dataset.values()]
     y_alt = [x['mapped_cds'] for x in ss_dataset.values()]
