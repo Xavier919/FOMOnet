@@ -237,13 +237,9 @@ class Data:
     def get_rnd_trx(self, ensembl_trx, trx_orfs):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
-            if ensembl_trx[trx]["biotype"] != "protein_coding":
+            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
                 continue
-            if not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
-                continue
-            if len(ensembl_trx[trx]["sequence"]) > 30000:
-                continue
-            if ensembl_trx[trx]["tsl"] not in ['tsl1', 'tsl2', 'tsl3']:
+            if ensembl_trx[trx]["tsl"] != 'tsl1' or len(ensembl_trx[trx]["sequence"]) > 30000:
                 continue
             for orf, attrs in orfs.items():
                 gene = attrs["gene_name"]
@@ -264,10 +260,8 @@ class Data:
         selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             if trx not in selected_trxps:
-                continue
-            if biotype != 'protein_coding' or seq_len > 30000:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
@@ -284,18 +278,22 @@ class Data:
         _, selected_genes = self.get_rnd_trx(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
+            orfs_list = []
             seq, seq_len, biotype, gene = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype'], ensembl_trx[trx]['gene_name']
-            if gene in selected_genes or biotype == 'nmd':
+            if gene in selected_genes or biotype == 'protein_coding' or biotype == 'nmd':
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
-                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
+                    orfs_list.append((start, stop))
+                elif attrs['MS'] >= 1 or attrs['TE'] >= 1:
                     seq_tensor[start:stop] = 1
+                    orfs_list.append((start, stop))
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
-                                'gene_name': ensembl_trx[trx]['gene_name']}
+                                'gene_name': ensembl_trx[trx]['gene_name'],
+                                'orfs_list': orfs_list}
         return dataset

@@ -14,9 +14,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('Xy_train')
-parser.add_argument('Xy_test')
-parser.add_argument('X_alt')
-parser.add_argument('trxps')
+parser.add_argument('alt_dataset')
 parser.add_argument('model')
 parser.add_argument('kernel', type=int)
 args = parser.parse_args()
@@ -31,14 +29,18 @@ def get_preds(model, X_test):
         preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
     return preds
 
-def semi_supervised_dataset(preds, seqs, trxps):
+def semi_supervised_dataset(preds, alt_dataset):
     ss_dataset = dict()
     for idx, out in enumerate(preds):
-        trx, seq = trxps[idx], seqs[idx]
+        trxps = [x for x in alt_dataset.keys()]
+        seqs = [x['mapped_seq'] for x in alt_dataset.values()]
+        orfs_lists = [x['orfs_list'] for x in alt_dataset.values()]
+        trx, seq, orfs_list = trxps[idx], seqs[idx], orfs_lists[idx]
         seq_tensor = torch.zeros(len(seq))
         coordinates = pred_orfs(out.numpy(), seq, window_size=7, threshold=0.25)
-        for start, stop in coordinates:
-            seq_tensor[start:stop] = 1
+        for tup in coordinates:
+            if tup in orfs_list:
+                seq_tensor[tup[0]:tup[1]] = 1
         if 1 in seq_tensor:
             ss_dataset[trx] = {'mapped_seq': seq,
                                'mapped_cds': seq_tensor.view(1,-1)}
@@ -49,20 +51,15 @@ if __name__ == "__main__":
 
     X_train, y_train = pickle.load(open(args.Xy_train, 'rb'))
     
-    X_alt = pickle.load(open(args.X_alt, 'rb'))
+    alt_dataset = pickle.load(open(args.alt_dataset, 'rb'))
 
-    mapped_X_alt = []
-    for x in X_alt:
-        mapped = map_seq(x)
-        mapped_X_alt.append(mapped)
-
-    trxps = pickle.load(open(args.trxps, 'rb'))
+    mapped_X_alt = [map_seq(x['mapped_seq']) for x in alt_dataset.values()]
 
     fomonet = FOMOnet(k=args.kernel)
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
 
     preds = get_preds(fomonet, mapped_X_alt)
-    ss_dataset = semi_supervised_dataset(preds, X_alt, trxps)
+    ss_dataset = semi_supervised_dataset(preds, alt_dataset)
 
     pickle.dump(preds, open('ss_preds.pkl', 'wb'))
     pickle.dump(ss_dataset, open('ss_dataset.pkl', 'wb'))
