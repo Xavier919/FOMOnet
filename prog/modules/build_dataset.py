@@ -291,7 +291,7 @@ class Data:
                 elif attrs['MS'] >= 1 or attrs['TE'] >= 1:
                     seq_tensor[start:stop] = 1
                     orfs_list.append((start, stop))
-            if 1 in seq_tensor:
+            if 1 in seq_tensor and seq_len <= 30000:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name'],

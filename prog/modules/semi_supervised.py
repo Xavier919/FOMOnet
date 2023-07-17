@@ -71,6 +71,8 @@ if __name__ == "__main__":
 
     X, y = X_train + X_alt, y_train + y_alt
 
-    Xy = (X,y)
-
-    pickle.dump(Xy, open('ss_Xy.pkl', 'wb'))
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    train_split = (X_train,y_train)
+    test_split = (X_test,y_test)
+    pickle.dump(train_split, open('data/ss_Xy_train.pkl', 'wb'))
+    pickle.dump(test_split, open('data/ss_Xy_test.pkl', 'wb'))
