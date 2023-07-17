@@ -87,7 +87,7 @@ def get_report(preds, y_test, trxps):
         pred = bin_pred(out, 0.5)
         recall = recall_score(target, pred)
         iou = iou_score(target, pred)
-        report[trx] = {'out': out,
+        report[idx] = {'out': out,
                        'mapped_cds': target,
                        'iou': iou,
                        'recall': recall}
