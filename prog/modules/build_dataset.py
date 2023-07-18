@@ -263,17 +263,17 @@ class Data:
             seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
             #if trx not in selected_trxps:
             #    continue
-            orfs = find_orfs(seq)
-            if len(orfs) != len(ensembl_trx[trx]['orf_accessions']):
+            orfs_ = find_orfs(seq)
+            if len(orfs_) != len(ensembl_trx[trx]['orf_accessions']):
                 continue
             if biotype == 'nmd' or seq_len > 30000:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
+                if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
-            if 1 in seq_tensor or len(orfs) == 0:
+            if 1 in seq_tensor or len(orfs_) == 0:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'gene_name': ensembl_trx[trx]['gene_name']}
