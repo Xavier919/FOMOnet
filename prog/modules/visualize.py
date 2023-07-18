@@ -26,7 +26,7 @@ def map_preds(report, trx_orfs, ensembl_trx, coordinates, n_display=5):
             targets = []
             orfs = dict()
             for orf, attrs in trx_orfs[trx].items():
-                if attrs['MS'] >= 2 or attrs['TE'] >= 2 or orf.startswith('ENSP'):
+                if attrs['MS'] >= 1 or attrs['TE'] >= 1 or orf.startswith('ENSP'):
                     targets.append((attrs['start'], attrs['stop']))
                 orfs[orf] = {'start':attrs['start'],
                             'stop':attrs['stop'],
