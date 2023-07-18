@@ -111,6 +111,7 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.BatchNorm1d(out_channels),
+            nn.PReLU(),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
