@@ -82,11 +82,12 @@ def get_preds(model, X_test):
 def get_report(preds, y_test, trxps):
     report = dict()
     for idx, out in enumerate(preds):
+        trx = trxps[idx]
         target = y_test[idx].view(-1)
         pred = bin_pred(out, 0.5)
         recall = recall_score(target, pred)
         iou = iou_score(target, pred)
-        report[idx] = {'out': out,
+        report[trx] = {'out': out,
                        'mapped_cds': target,
                        'iou': iou,
                        'recall': recall}
