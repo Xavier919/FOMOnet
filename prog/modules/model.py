@@ -102,7 +102,7 @@ class FOMOnet(nn.Module):
             nn.GELU(),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.BatchNorm1d(out_channels),
+            #nn.BatchNorm1d(out_channels),
             nn.GELU(),
         )
         return block
@@ -111,7 +111,7 @@ class FOMOnet(nn.Module):
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.BatchNorm1d(out_channels),
+            #nn.BatchNorm1d(out_channels),
             nn.GELU(),
         )
         return block
