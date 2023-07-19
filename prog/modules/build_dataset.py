@@ -262,14 +262,11 @@ class Data:
         return dataset
     
     def split_dataset(self, dataset):
-        chr_splits = [('1','6','11','16','21'),('2','7','12','17','22'),('3','8','13','18','X'),('4','9','14','19','Y'),('5','10','15','20')]
+        chr_splits = [('1','7','13','19'),('2','8','14','20'),('3','9','15','21'),('4','10','16','22'),('5','11','17','X'), ('6','12','18','Y')]
         for idx, chr_split in enumerate(chr_splits):
             X_train = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] not in chr_split]
             y_train = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] not in chr_split]
             X_test = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in chr_split]
             y_test = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in chr_split]
-            train, test = (X_train,y_train), (X_test,y_test)
-            trxps = [x for x,y in dataset.items() if y['chromosome'] in chr_split]
-            #pickle.dump(train, open(f'data/train{idx+1}.pkl', 'wb'))
-            #pickle.dump(test, open(f'data/test{idx+1}.pkl', 'wb'))
-            pickle.dump(trxps, open(f'data/trxps{idx+1}.pkl', 'wb'))
+            split = ((X_train,y_train), (X_test,y_test), [x for x,y in dataset.items() if y['chromosome'] in chr_split])
+            pickle.dump(split, open(f'data/split{idx+1}.pkl', 'wb'))

@@ -16,10 +16,9 @@ from utils import *
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('data')
+parser.add_argument('split')
 parser.add_argument('model')
 parser.add_argument('kernel', type=int)
-parser.add_argument('trxps', type=str)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -95,12 +94,13 @@ def get_report(preds, y_test, trxps):
 
 if __name__ == "__main__":
 
-    X_test, y_test = pickle.load(open(args.data, 'rb'))
+    split = pickle.load(open(args.split, 'rb'))
+    train, test, trxps = split
 
-    X_test = [map_seq(x) for x in X_test]
-
-    trxps = pickle.load(open(args.trxps, 'rb'))
-    _, trxps, _, _ = train_test_split(trxps, trxps, test_size=0.1, random_state=42)
+    X_train, y_train = train
+    X_test, y_test = test
+    
+    X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
 
     fomonet = FOMOnet(k=args.kernel)
     fomonet.load_state_dict(torch.load(args.model, map_location=torch.device('cuda')))
