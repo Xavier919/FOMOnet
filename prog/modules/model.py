@@ -5,12 +5,11 @@ from torch.nn import functional as F
 
 class FOMOnet(nn.Module):
 
-    def __init__(self, p=0.5, k=5):
+    def __init__(self, k=5):
         super().__init__()
 
         #encoder pooling operation
         self.maxpool = nn.MaxPool1d(kernel_size=2)
-        self.dropout = nn.Dropout(p=p)
         #encoder convolutional blocks
         self.conv1 = self.conv_block(4, 32, k=k)
         self.conv2 = self.conv_block(32, 64, k=k)

@@ -24,13 +24,11 @@ writer = SummaryWriter()
 test_writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('train_split')
-parser.add_argument('test_split')
+parser.add_argument('train')
+parser.add_argument('test')
 parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
-parser.add_argument('wd', type=float)
-parser.add_argument('dropout', type=float)
 parser.add_argument('kernel', type=int)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
@@ -40,12 +38,11 @@ if __name__ == "__main__":
     print(f'learning rate:{args.lr}\n')
     print(f'weight decay:{args.wd}\n')
     print(f'batch size:{args.batch_size}\n')
-    print(f'dropout:{args.dropout}\n')
     print(f'kernel:{args.kernel}\n')
 
     #load train & test data
-    X_train, y_train = pickle.load(open(args.train_split, 'rb'))
-    X_test, y_test = pickle.load(open(args.test_split, 'rb'))
+    X_train, y_train = pickle.load(open(args.train, 'rb'))
+    X_test, y_test = pickle.load(open(args.test, 'rb'))
 
     X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
 
@@ -62,28 +59,21 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
     #instantiate model, optimizer and loss function
-    #fomonet = FOMOnet(p=args.dropout, k=args.kernel).cuda()
+    fomonet = FOMOnet(k=args.kernel).cuda()
 
-    #optimizer = optim.Adam(fomonet.parameters(), args.lr, weight_decay=args.wd)
-    #loss_function = nn.BCELoss(reduction='none').cuda()
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    num_gpus = torch.cuda.device_count()
-    fomonet = FOMOnet(p=args.dropout, k=args.kernel).to(device)
-    if num_gpus > 1:
-        fomonet = nn.DataParallel(fomonet)
-    optimizer = optim.Adam(fomonet.parameters(), lr=args.lr, weight_decay=args.wd)
-    loss_function = nn.BCELoss(reduction='none').to(device)
+    optimizer = optim.Adam(fomonet.parameters(), args.lr)
+    loss_function = nn.BCELoss(reduction='none').cuda()
 
     #train model
     best_model = 1.0
     for epoch in range(epochs):
         fomonet.train()
         losses = []
-        for batch in train_loader:
-            X = batch[0].view(len(batch[0]),4,-1).cuda()
-            y = batch[1].view(len(batch[1]),-1).cuda()
-            outputs = fomonet(X).view(len(batch[0]),-1)
+        for X, y in train_loader:
+            size = len(X)
+            X = X.view(size,4,-1).cuda()
+            y = y.view(size,-1).cuda()
+            outputs = fomonet(X).view(size,-1)
             fomonet.zero_grad()
             loss = get_loss(outputs, X, y, loss_function)
             loss.backward()
@@ -94,10 +84,11 @@ if __name__ == "__main__":
         print(f'{epoch}_{np.mean(losses)}')
         fomonet.eval()
         test_losses = []
-        for batch in test_loader:
-            X = batch[0].view(len(batch[0]),4,-1).cuda()
-            y = batch[1].view(len(batch[1]),-1).cuda()
-            outputs = fomonet(X).view(len(batch[0]),-1)
+        for X, y in test_loader:
+            size = len(X)
+            X = X.view(size,4,-1).cuda()
+            y = y.view(size,-1).cuda()
+            outputs = fomonet(X).view(size,-1)
             test_loss = get_loss(outputs, X, y, loss_function)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)

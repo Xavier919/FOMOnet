@@ -1,23 +1,18 @@
 import csv
-from Bio import SeqIO
 import pyfaidx
 import pickle
 import numpy as np
 import torch
 from tqdm import tqdm_notebook as tqdm
-import pandas as pd
 import torch
-from sklearn.model_selection import train_test_split
 import random
-from matplotlib import pyplot as plt
 from tqdm.notebook import tqdm
 import random
 import pandas as pd
-import argparse
 from modules.utils import *
 
 class Data:
-    def __init__(self, OP_tsv, Ens_trx, trx_fasta, sorfs):
+    def __init__(self, OP_tsv, Ens_trx, trx_fasta):
         
         self.biotype_grouping = {
             'protein_coding': 'protein_coding',
@@ -96,7 +91,6 @@ class Data:
         self.Ens_trx = Ens_trx
         self.ensembl95_trxps = pyfaidx.Fasta(trx_fasta)
         self.OP_prot_MS, self.OP_trx_altprot = self.get_altprot_info()
-        self.sorfs = sorfs
 
     def get_op_trx(self):
         op_trx_accession = set()
@@ -126,7 +120,6 @@ class Data:
                     cols = row
                     continue
                 line = dict(zip(cols, row))
-                
                 if "ENST" not in line["transcript accession"]:
                     continue
                 if not any( x in line["protein accession numbers"] for x in ["IP_", "II_", "ENSP"]):
@@ -165,7 +158,6 @@ class Data:
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
-                    'og_biotype': line["Transcript type"],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -187,7 +179,7 @@ class Data:
                 if not any(x in line["protein accession numbers"] for x in ["IP_", "ENSP", "II_"]):
                     continue
                 trx = line["transcript accession"].split(".")[0]
-                altprot = line["protein accession numbers"].split(".")[0]
+                prot_id = line["protein accession numbers"].split(".")[0]
                 seq = ensembl_trx[trx]['sequence']
                 start, stop = int(line['start transcript coordinates'])-1, int(line['stop transcript coordinates'])-1
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
@@ -197,7 +189,7 @@ class Data:
                     continue
                 altprots = dict()
                 if trx not in trx_orfs:
-                    altprots[altprot] = {'MS':int(line["MS score"]),
+                    altprots[prot_id] = {'MS':int(line["MS score"]),
                                         'TE':int(line["TE score"]),
                                         'unique_pept':0,
                                         'domains':int(line["Domains"]),
@@ -208,13 +200,11 @@ class Data:
                                         'chromosome':chromosome,
                                         'ORF_length':stop-start,
                                         'biotype':ensembl_trx[trx]['biotype'],
-                                        'og_biotype':ensembl_trx[trx]['og_biotype'],
                                         'frame':frame,
-                                        'gene_name':ensembl_trx[trx]['gene_name']
-                                        }
+                                        'gene_name':ensembl_trx[trx]['gene_name']}
                     trx_orfs[trx] = altprots
                 else:
-                    trx_orfs[trx][altprot] = {'MS':int(line["MS score"]),
+                    trx_orfs[trx][prot_id] = {'MS':int(line["MS score"]),
                                             'TE':int(line["TE score"]),
                                             'unique_pept':0,
                                             'domains':int(line["Domains"]),
@@ -226,76 +216,60 @@ class Data:
                                             'ORF_length':int(line['stop transcript coordinates'])-int(line['start transcript coordinates']),
                                             'biotype':ensembl_trx[trx]['biotype'],
                                             'frame':frame,
-                                            'gene_name':ensembl_trx[trx]['gene_name']
-                                            }
+                                            'gene_name':ensembl_trx[trx]['gene_name']}
         for trx in ensembl_trx.keys():
             if trx not in trx_orfs:
                 altprots = dict()
                 trx_orfs[trx] = altprots
         return trx_orfs
 
-    def get_rnd_trx(self, ensembl_trx, trx_orfs):
+    def get_trx_list(self, ensembl_trx, trx_orfs):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
-            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]):
+            seq_len, tsl = len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'].split(' ')[0]
+            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]) or seq_len > 30000:
                 continue
-            if ensembl_trx[trx]["tsl"] != 'tsl1' or len(ensembl_trx[trx]["sequence"]) > 30000:
-                continue
-            for orf, attrs in orfs.items():
+            for attrs in orfs.values():
                 gene = attrs["gene_name"]
                 if gene not in gene_trxps:
-                    gene_trxps[gene] = [trx]
+                    gene_trxps[gene] = [(trx, tsl)]
                 else:
-                    gene_trxps[gene].append(trx)
-        selected_trxps = []
-        selected_genes = []
-        random.seed(5)
+                    gene_trxps[gene].append((trx, tsl))
+        trx_list = []
+        random.seed(42)
         for gene, trxps in gene_trxps.items():
-            trx = random.choice(trxps)
-            selected_trxps.append(trx)
-            selected_genes.append(gene)
-        return selected_trxps, selected_genes
-
+            sorted_trx = sorted(trxps, key=lambda x: x[1])
+            max_tsl = sorted_trx[0][-1]
+            max_tsl_trx = [trx[0] for trx in sorted_trx if trx[-1] == max_tsl]
+            rnd_trx = random.choice(max_tsl_trx)
+            trx_list.append(rnd_trx)
+        return trx_list
+    
     def dataset(self, ensembl_trx, trx_orfs):
-        #selected_trxps, _ = self.get_rnd_trx(ensembl_trx, trx_orfs)
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            #if trx not in selected_trxps:
-            #    continue
-            orfs_ = find_orfs(seq)
-            if len(orfs_) != len(ensembl_trx[trx]['orf_accessions']):
-                continue
-            if biotype == 'nmd' or seq_len > 30000:
-                continue
+        for trx in tqdm(trx_list):
+            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
             seq_tensor = torch.zeros(seq_len)
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
+            for orf, attrs in trx_orfs[trx].items():
+                start, stop, chromosome = attrs['start'], attrs['stop'], attrs['chromosome']
+                if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
-            if 1 in seq_tensor or len(orfs_) == 0:
+            if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
-                                'gene_name': ensembl_trx[trx]['gene_name']}
+                                'chromosome': chromosome}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, trxps):
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            if trx in trxps:
-                continue
-            seq, seq_len, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['biotype']
-            orfs = find_orfs(seq)
-            if len(orfs) != len(ensembl_trx[trx]['orf_accessions']):
-                continue
-            if biotype == 'nmd' or seq_len > 30000:
-                continue
-            list_orfs = []
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if attrs['MS'] >= 1 or attrs['TE'] >= 1:
-                    list_orfs.append((start, stop))
-            dataset[trx] = {'mapped_seq': seq,
-                            'list_orfs': list_orfs,
-                            'gene_name': ensembl_trx[trx]['gene_name']}
-        return dataset
+    def split_dataset(self, dataset):
+        chr_splits = [('1','6','11','16','21'),('2','7','12','17','22'),('3','8','13','18','X'),('4','9','14','19','Y'),('5','10','15','20')]
+        for idx, chr_split in enumerate(chr_splits):
+            X_train = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] not in chr_split]
+            y_train = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] not in chr_split]
+            X_test = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in chr_split]
+            y_test = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in chr_split]
+            train, test = (X_train,y_train), (X_test,y_test)
+            trxps = [x for x,y in dataset.items() if y['chromosome'] in chr_split]
+            #pickle.dump(train, open(f'data/train{idx+1}.pkl', 'wb'))
+            #pickle.dump(test, open(f'data/test{idx+1}.pkl', 'wb'))
+            pickle.dump(trxps, open(f'data/trxps{idx+1}.pkl', 'wb'))
