@@ -22,7 +22,6 @@ parser.add_argument('kernel', type=int)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
-
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
     return bin_pred

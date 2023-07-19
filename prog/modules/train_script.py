@@ -9,8 +9,6 @@ import os
 import shutil
 import numpy as np
 import torch.nn as nn
-import torch.nn.parallel
-import torch.distributed as dist
 #project specific imports
 from model import FOMOnet
 from transcripts import Transcripts
@@ -44,7 +42,7 @@ if __name__ == "__main__":
 
     X_train, y_train = train
     X_test, y_test = test
-    
+
     X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
 
     #pre-processing data for pytorch DataLoader

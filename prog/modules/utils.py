@@ -1,7 +1,5 @@
 import torch
 import torch
-import random
-from torch.nn.utils.rnn import pad_sequence
 import numpy as np
 
 def pad_seqs(seqs, num_chan):
@@ -22,7 +20,6 @@ def utility_fct(Xy):
 def get_loss(outputs, X, y, loss_function):
     loss = loss_function(outputs, y)
     loss_mask = torch.stack([x[0] != 0 for x in X])
-    #loss_mask = X != 0
     loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
     mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=1).view(-1)).mean()
     return mean_loss
@@ -78,3 +75,13 @@ def pred_orfs(out, seq, window_size=7, threshold=0.5):
             if (max_val - min_val >= threshold and max_index < min_index) or (len(seq) < stop+ws and any(i >= 0.5 for i in stop_window)):
                 pred_orfs.append((start, stop))
     return pred_orfs
+
+def build_fasta(data, filename):
+    trx_seqs = []
+    for trx, seq in data:
+        header = f'>{trx}'
+        trx_seq = header + '\n' + seq.upper()
+        trx_seqs.append(trx_seq)
+    fasta_text = '\n'.join(trx_seqs)
+    with open(filename + '.fa', 'w') as fasta_file:
+        fasta_file.write(fasta_text)
