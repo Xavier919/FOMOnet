@@ -33,7 +33,6 @@ args = parser.parse_args()
 if __name__ == "__main__":
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
-    print(f'weight decay:{args.wd}\n')
     print(f'batch size:{args.batch_size}\n')
     print(f'kernel:{args.kernel}\n')
 
