@@ -106,7 +106,8 @@ if __name__ == "__main__":
 
     preds = get_preds(fomonet, X_test)
 
+    pickle.dump(preds, open(f'preds_{args.tag}.pkl', 'wb'))
+
     report = get_report(preds, y_test, trxps)
 
-    pickle.dump(preds, open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(report, open(f'report_{args.tag}.pkl', 'wb'))

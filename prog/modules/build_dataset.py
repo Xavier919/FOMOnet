@@ -158,6 +158,7 @@ class Data:
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
+                    'chromosome': line['Chromosome/scaffold name'],
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -248,17 +249,49 @@ class Data:
     def dataset(self, ensembl_trx, trx_orfs):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
-        for trx in tqdm(trx_list):
-            seq, seq_len = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence'])
+        for trx, orfs in tqdm(trx_orfs.items()):
+            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
+            if trx not in trx_list:
+                continue
             seq_tensor = torch.zeros(seq_len)
-            for orf, attrs in trx_orfs[trx].items():
-                start, stop, chromosome = attrs['start'], attrs['stop'], attrs['chromosome']
+            for orf, attrs in orfs.items():
+                start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
-                                'chromosome': chromosome}
+                                'chromosome': chr}
+        return dataset
+    
+    def nc_dataset(self, ensembl_trx):
+        dataset = dict()
+        for trx, attrs in ensembl_trx.items():
+            seq, seq_len, chr, tsl = attrs['sequence'], len(attrs['sequence']), attrs['chromosome'], attrs['tsl']
+            n_orfs = len(find_orfs(seq))
+            if seq_len > 30000 or tsl not in ['tsl1', 'tsl2', 'tsl3']:
+                continue
+            if n_orfs == 0:
+                dataset[trx] = {'mapped_seq': seq,
+                                'mapped_cds': torch.zeros(seq_len).view(1,-1),
+                                'chromosome': chr}
+        return dataset
+    
+    def alt_dataset(self, ensembl_trx, trx_orfs, dataset):
+        trx_list = [x for x in dataset.keys()]
+        dataset = dict()
+        for trx, orfs in tqdm(trx_orfs.items()):
+            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
+            if trx in trx_list:
+                continue
+            seq_tensor = torch.zeros(seq_len)
+            for orf, attrs in orfs.items():
+                start, stop = attrs['start'], attrs['stop']
+                if attrs['MS'] >= 2 or attrs['TE'] >= 2 or orf.startswith('ENSP'):
+                    seq_tensor[start:stop] = 1
+            dataset[trx] = {'mapped_seq': seq,
+                            'mapped_cds': seq_tensor.view(1,-1),
+                            'chromosome': chr}
         return dataset
     
     def split_dataset(self, dataset):
