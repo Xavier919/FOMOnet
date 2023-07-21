@@ -262,19 +262,13 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
-        return dataset
-    
-    def nc_dataset(self, ensembl_trx):
-        dataset = dict()
-        for trx, attrs in ensembl_trx.items():
-            seq, seq_len, chr, tsl = attrs['sequence'], len(attrs['sequence']), attrs['chromosome'], attrs['tsl']
-            n_orfs = len(find_orfs(seq))
-            if seq_len > 30000 or tsl not in ['tsl1', 'tsl2', 'tsl3']:
-                continue
-            if n_orfs == 0:
-                dataset[trx] = {'mapped_seq': seq,
-                                'mapped_cds': torch.zeros(seq_len).view(1,-1),
-                                'chromosome': chr}
+                random.seed(42)
+                shuff_seq = list(seq)
+                random.shuffle(shuff_seq)
+                shuff_seq = ''.join(shuff_seq)
+                dataset[f'{trx}_s'] = {'mapped_seq': shuff_seq,
+                                       'mapped_cds': torch.zeros(seq_len).view(1,-1),
+                                       'chromosome': chr}
         return dataset
     
     def alt_dataset(self, ensembl_trx, trx_orfs, dataset):
