@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset
+from torch.utils.data import Datase
 
 class Transcripts(Dataset):
     def __init__(self, data, targets):
