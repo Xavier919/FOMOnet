@@ -33,7 +33,7 @@ def get_loss(X, y, out, loss_fct):
     #add a dummy dimension
     zero_mask = zero_mask.unsqueeze(1)
     #expand the mask tensor to the length of the output
-    zero_mask = zero_mask.expand(-1, 3, -1)
+    zero_mask = zero_mask.expand(-1, 1, -1)
     #apply 0. where True
     loss[zero_mask] = 0.
     #sum of one-hot encoded tensor for every x (equivalent to sequence length of every x)
