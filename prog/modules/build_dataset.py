@@ -262,33 +262,28 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
-                random.seed(42)
-                shuff_seq = list(seq)
-                random.shuffle(shuff_seq)
-                shuff_seq = ''.join(shuff_seq)
-                dataset[f'{trx}_s'] = {'mapped_seq': shuff_seq,
-                                       'mapped_cds': torch.zeros(seq_len).view(1,-1),
-                                       'chromosome': chr}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, dataset):
-        trx_list = [x for x in dataset.keys()]
+    def dataset(self, ensembl_trx, trx_orfs):
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            if trx in trx_list:
+            if trx not in trx_list:
                 continue
-            seq_tensor = torch.zeros(seq_len)
+            seq_tensor = torch.zeros(3,seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if attrs['MS'] >= 2 or attrs['TE'] >= 2 or orf.startswith('ENSP'):
-                    seq_tensor[start:stop] = 1
-            dataset[trx] = {'mapped_seq': seq,
-                            'mapped_cds': seq_tensor.view(1,-1),
-                            'chromosome': chr}
+                frame = find_frame(start, stop)
+                if orf.startswith('ENSP'):
+                    seq_tensor[frame][start:stop] = 1
+            if 1 in seq_tensor:
+                dataset[trx] = {'mapped_seq': seq,
+                                'mapped_cds': seq_tensor.view(3,-1),
+                                'chromosome': chr}
         return dataset
     
-    def split_dataset(self, dataset):
+    def split_dataset(self, dataset, tag):
         chr_splits = [('1','7','13','19'),('2','8','14','20'),('3','9','15','21'),('4','10','16','22'),('5','11','17','X'), ('6','12','18','Y')]
         for idx, chr_split in enumerate(chr_splits):
             X_train = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] not in chr_split]
@@ -296,4 +291,4 @@ class Data:
             X_test = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in chr_split]
             y_test = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in chr_split]
             split = ((X_train,y_train), (X_test,y_test), [x for x,y in dataset.items() if y['chromosome'] in chr_split])
-            pickle.dump(split, open(f'data/split{idx+1}.pkl', 'wb'))
+            pickle.dump(split, open(f'data/{tag}{idx+1}.pkl', 'wb'))

@@ -17,16 +17,40 @@ def utility_fct(Xy):
     X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
     return (X, y)
 
-def get_loss(outputs, X, y, loss_function):
-    loss = loss_function(outputs, y)
-    loss_mask = torch.stack([x[0] != 0 for x in X])
-    loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
-    mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=1).view(-1)).mean()
-    return mean_loss
+#def get_loss(outputs, X, y, loss_function):
+#    loss = loss_function(outputs, y)
+#    loss_mask = torch.stack([x[0] != 0 for x in X])
+#    loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
+#    mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=1).view(-1)).mean()
+#    return mean_loss
+
+
+def get_loss(X, y, out, loss_fct):
+    #calculate the loss between output and target
+    loss = loss_fct(out, y).cuda()
+    #replace zero padding by True
+    zero_mask = torch.all(X == 0, dim=1)
+    #add a dummy dimension
+    zero_mask = zero_mask.unsqueeze(1)
+    #expand the mask tensor to the length of the output
+    zero_mask = zero_mask.expand(-1, 3, -1)
+    #apply 0. where True
+    loss[zero_mask] = 0.
+    #sum of one-hot encoded tensor for every x (equivalent to sequence length of every x)
+    lens = torch.sum(X, dim=(1,-1))
+    #total loss for every x/y pair
+    loss_sums = torch.sum(loss, dim=(1,-1))
+    #return mean loss
+    return (loss_sums/lens).mean()
 
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
+
+def find_frame(start, stop):
+    for i in range(3):
+        if (start - i) % 3 == 0 and (stop - i) % 3 == 0:
+            return i
 
 def find_orfs(seq, keep_longest=True, nc_starts=False):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']

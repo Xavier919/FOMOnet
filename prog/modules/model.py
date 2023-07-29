@@ -24,7 +24,7 @@ class FOMOnet(nn.Module):
         self.dconv4 = self.conv_block(256, 128, k=k)
         self.dconv3 = self.conv_block(128, 64, k=k)
         self.dconv2 = self.conv_block(64, 32, k=k)
-        self.dconv1 = self.final_block(32, 1, k=k)
+        self.dconv1 = self.final_block(32, 3, k=k)
         #decoder upsampling operations
         self.upsample6 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
