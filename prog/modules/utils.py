@@ -14,7 +14,7 @@ def pad_seqs(seqs, num_chan):
 
 def utility_fct(Xy):
     seq1, seq2 = zip(*Xy)
-    X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 3)
+    X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
     return (X, y)
 
 #def get_loss(outputs, X, y, loss_function):
