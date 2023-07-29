@@ -60,8 +60,7 @@ if __name__ == "__main__":
     fomonet = FOMOnet(k=args.kernel).cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
-    #loss_function = nn.BCELoss(reduction='none').cuda()
-    loss_function = nn.MSELoss(reduction='none').cuda()
+    loss_function = nn.BCELoss(reduction='none').cuda()
 
     #train model
     best_model = 1.0
