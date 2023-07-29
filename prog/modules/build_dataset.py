@@ -237,7 +237,7 @@ class Data:
                 else:
                     gene_trxps[gene].append((trx, tsl))
         trx_list = []
-        random.seed(42)
+        random.seed(2)
         for gene, trxps in gene_trxps.items():
             sorted_trx = sorted(trxps, key=lambda x: x[1])
             max_tsl = sorted_trx[0][-1]
@@ -256,30 +256,12 @@ class Data:
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
+                #frame = find_frame(start, stop)
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
-                                'chromosome': chr}
-        return dataset
-    
-    def dataset(self, ensembl_trx, trx_orfs):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            if trx not in trx_list:
-                continue
-            seq_tensor = torch.zeros(3,seq_len)
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                frame = find_frame(start, stop)
-                if orf.startswith('ENSP'):
-                    seq_tensor[frame][start:stop] = 1
-            if 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': seq,
-                                'mapped_cds': seq_tensor.view(3,-1),
                                 'chromosome': chr}
         return dataset
     
