@@ -10,6 +10,7 @@ class FOMOnet(nn.Module):
 
         #encoder pooling operation
         self.maxpool = nn.MaxPool1d(kernel_size=2)
+        self.dropout = nn.Dropout(p=0.2)
         #encoder convolutional blocks
         self.conv1 = self.conv_block(4, 32, k=k)
         self.conv2 = self.conv_block(32, 64, k=k)
@@ -44,50 +45,63 @@ class FOMOnet(nn.Module):
         #encoder layer 1
         block1 = self.conv1(x) 
         x = self.maxpool(block1)
+        x = self.dropout(x)
         #encoder layer 2
         block2 = self.conv2(x) 
         x = self.maxpool(block2)
+        x = self.dropout(x)
         #encoder layer 3
         block3 = self.conv3(x) 
         x = self.maxpool(block3)
+        x = self.dropout(x)
         #encoder layer 4
         block4 = self.conv4(x) 
         x = self.maxpool(block4)
+        x = self.dropout(x)
         #encoder layer 5
         block5 = self.conv5(x) 
         x = self.maxpool(block5)
+        x = self.dropout(x)
         #encoder layer 6
         block6 = self.conv6(x) 
         x = self.maxpool(block6)
+        x = self.dropout(x)
         #bottleneck layer
         bottleneck = self.convbot(x)
+        bottleneck = self.dropout(bottleneck)
         #decoder layer 6
         upsamp6 = self.upsample6(bottleneck)
         cropped6 = self.crop(upsamp6, block6)
         cat6 = torch.cat((upsamp6, cropped6), 1)
         x = self.dconv6(cat6)
+        x = self.dropout(x)
         #decoder layer 5
         upsamp5 = self.upsample5(x)
         cropped5 = self.crop(upsamp5, block5)
         cat5 = torch.cat((upsamp5, cropped5), 1)
         x = self.dconv5(cat5)
+        x = self.dropout(x)
         #decoder layer 4
         upsamp4 = self.upsample4(x)
         cropped4 = self.crop(upsamp4, block4)
         cat4 = torch.cat((upsamp4, cropped4), 1)
         x = self.dconv4(cat4)
+        x = self.dropout(x)
         #decoder layer 3
         upsamp3 = self.upsample3(x)
         cropped3 = self.crop(upsamp3, block3)
         cat3 = torch.cat((upsamp3, cropped3), 1)
         x = self.dconv3(cat3)
+        x = self.dropout(x)
         #decoder layer 2
         upsamp2 = self.upsample2(x)
         cropped2 = self.crop(upsamp2, block2)
         cat2 = torch.cat((upsamp2, cropped2), 1)
         x = self.dconv2(cat2)
+        x = self.dropout(x)
         #decoder layer 1 (final layer)
         out = self.dconv1(x)
+        out = self.dropout(out)
         out = F.interpolate(out, init_shape)
 
         return self.sigmoid(out)
@@ -97,11 +111,11 @@ class FOMOnet(nn.Module):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
@@ -110,7 +124,7 @@ class FOMOnet(nn.Module):
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
