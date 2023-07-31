@@ -112,7 +112,7 @@ class FOMOnet(nn.Module):
 
         #decoder layer 1 (final layer)
         x = self.dconv1(x)
-        x = self.dropout(x)
+        #x = self.dropout(x)
         x = F.interpolate(x, init_shape)
         return self.sigmoid(x)
 
