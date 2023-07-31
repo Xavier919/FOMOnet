@@ -256,8 +256,25 @@ class Data:
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                #frame = find_frame(start, stop)
                 if orf.startswith('ENSP'):
+                    seq_tensor[start:stop] = 1
+            if 1 in seq_tensor:
+                dataset[trx] = {'mapped_seq': seq,
+                                'mapped_cds': seq_tensor.view(1,-1),
+                                'chromosome': chr}
+        return dataset
+    
+    def alt_dataset(self, ensembl_trx, trx_orfs, type):
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+        dataset = dict()
+        for trx, orfs in tqdm(trx_orfs.items()):
+            seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
+            if trx in trx_list or type != biotype:
+                continue
+            seq_tensor = torch.zeros(seq_len)
+            for orf, attrs in orfs.items():
+                start, stop = attrs['start'], attrs['stop']
+                if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
