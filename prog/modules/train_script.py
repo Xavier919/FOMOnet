@@ -27,7 +27,7 @@ parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
 parser.add_argument('kernel', type=int)
-parser.add_argument('dropout', type=int)
+parser.add_argument('dropout', type=float)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 

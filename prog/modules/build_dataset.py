@@ -276,10 +276,9 @@ class Data:
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
-            if 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': seq,
-                                'mapped_cds': seq_tensor.view(1,-1),
-                                'chromosome': chr}
+            dataset[trx] = {'mapped_seq': seq,
+                            'mapped_cds': seq_tensor.view(1,-1),
+                            'chromosome': chr}
         return dataset
     
     def split_dataset(self, dataset, tag):
