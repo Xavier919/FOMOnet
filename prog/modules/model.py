@@ -5,12 +5,12 @@ from torch.nn import functional as F
 
 class FOMOnet(nn.Module):
 
-    def __init__(self, k=5):
+    def __init__(self, k=5, p=0.5):
         super().__init__()
 
         #encoder pooling operation
         self.maxpool = nn.MaxPool1d(kernel_size=2)
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=p)
         #encoder convolutional blocks
         self.conv1 = self.conv_block(4, 32, k=k)
         self.conv2 = self.conv_block(32, 64, k=k)
@@ -107,7 +107,6 @@ class FOMOnet(nn.Module):
 
         #decoder layer 1 (final layer)
         x = self.dconv1(x)
-        #x = self.dropout(x)
         x = F.interpolate(x, init_shape)
         return self.sigmoid(x)
 
@@ -116,11 +115,11 @@ class FOMOnet(nn.Module):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
@@ -129,7 +128,7 @@ class FOMOnet(nn.Module):
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
         )
         return block

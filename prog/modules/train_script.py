@@ -27,6 +27,7 @@ parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
 parser.add_argument('kernel', type=int)
+parser.add_argument('dropout', type=int)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
     #instantiate model, optimizer and loss function
-    fomonet = FOMOnet(k=args.kernel).cuda()
+    fomonet = FOMOnet(k=args.kernel, p=args.dropout).cuda()
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
     loss_function = nn.BCELoss(reduction='none').cuda()
