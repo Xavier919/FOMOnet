@@ -264,12 +264,12 @@ class Data:
                                 'chromosome': chr}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, type):
+    def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            if trx in trx_list or type != biotype:
+            if trx in trx_list or biotype not in biotypes:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
