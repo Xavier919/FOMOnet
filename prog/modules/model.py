@@ -18,6 +18,7 @@ class FOMOnet(nn.Module):
         self.conv4 = self.conv_block(128, 256, k=k)
         self.conv5 = self.conv_block(256, 512, k=k)
         self.conv6 = self.conv_block(512, 1024, k=k)
+        self.conv7 = self.conv_block(1024, 1024, k=k)
         #decoder convolutional blocks
         self.dconv5 = self.conv_block(1024, 512, k=k)
         self.dconv4 = self.conv_block(512, 256, k=k)
@@ -69,6 +70,10 @@ class FOMOnet(nn.Module):
         #encoder layer 6
         block6 = self.conv6(x) 
         x = self.dropout(block6)
+
+        #encoder layer 7
+        block7 = self.conv7(x) 
+        x = self.dropout(block7)
 
         #decoder layer 5
         upsamp5 = self.upsample5(x)
