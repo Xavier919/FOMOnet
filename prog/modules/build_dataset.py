@@ -267,20 +267,23 @@ class Data:
         return dataset
     
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            if trx in trx_list or biotype not in biotypes:
+            if biotype not in biotypes or seq_len > 30000:
                 continue
+            exclude = 'n'
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') or attrs['MS'] >= 2 or attrs['TE'] >= 2:
+                if orf.startswith('ENSP'):
+                    exclude = 'y'
+                if attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
-            dataset[trx] = {'mapped_seq': seq,
-                            'mapped_cds': seq_tensor.view(1,-1),
-                            'chromosome': chr}
+            if exclude == 'n':
+                dataset[trx] = {'mapped_seq': seq,
+                                'mapped_cds': seq_tensor.view(1,-1),
+                                'chromosome': chr}
         return dataset
     
     def split_dataset(self, dataset, tag):

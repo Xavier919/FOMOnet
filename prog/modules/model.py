@@ -107,7 +107,6 @@ class FOMOnet(nn.Module):
 
         #decoder layer f (final layer)
         x = self.dconvf(x)
-        x = self.dropout(x)
         x = F.interpolate(x, init_shape)
         return self.sigmoid(x)
 
@@ -117,12 +116,12 @@ class FOMOnet(nn.Module):
             #nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             #nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
             #nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             #nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
@@ -131,7 +130,7 @@ class FOMOnet(nn.Module):
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.PReLU(),
+            nn.GELU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
