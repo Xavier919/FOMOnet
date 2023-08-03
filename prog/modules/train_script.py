@@ -45,8 +45,8 @@ if __name__ == "__main__":
 
 
     #synthetic data
-    X_train = [n_mask(x, seed=2, pct=15) for x in X_train] + X_train
-    y_train = y_train + y_train
+    X_train = [n_mask(x, seed=2, pct=15) for x in X_train] + X_train + [n_mask(x, seed=3, pct=15) for x in X_train]
+    y_train = y_train + y_train + y_train
 
     #convert to one-hot encoding
     X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
