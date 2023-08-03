@@ -1,5 +1,5 @@
 import torch
-import torch
+import random
 import numpy as np
 
 def pad_seqs(seqs, num_chan):
@@ -16,14 +16,6 @@ def utility_fct(Xy):
     seq1, seq2 = zip(*Xy)
     X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
     return (X, y)
-
-#def get_loss(outputs, X, y, loss_function):
-#    loss = loss_function(outputs, y)
-#    loss_mask = torch.stack([x[0] != 0 for x in X])
-#    loss_masked = loss.where(loss_mask.view(len(X),-1), torch.tensor(0.).cuda())
-#    mean_loss = (loss_masked.sum(axis=1)/loss_mask.sum(axis=1).view(-1)).mean()
-#    return mean_loss
-
 
 def get_loss(X, y, out, loss_fct):
     #calculate the loss between output and target
@@ -47,12 +39,18 @@ def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
 
+def n_mask(input_string, pct=15):
+    random.seed(5)
+    n_count = int(len(input_string) * pct / 100)
+    n_indices = random.sample(range(len(input_string)), n_count)
+    return ''.join(['N' if i in n_indices else char for i, char in enumerate(input_string)])
+
 def find_frame(start, stop):
     for i in range(3):
         if (start - i) % 3 == 0 and (stop - i) % 3 == 0:
             return i
 
-def find_orfs(seq, long=False, nc=True):
+def find_orfs(seq, long=True, nc=False):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']
     if nc: start_codons = ['ATG', 'TTG', 'GTG', 'CTG']
     frames = [0,1,2]

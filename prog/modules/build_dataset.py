@@ -228,7 +228,7 @@ class Data:
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
             seq_len, tsl = len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'].split(' ')[0]
-            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x in trx_orfs[trx].keys()]) or seq_len > 30000:
+            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items() if y['MS'] >= 2 or y['TE'] >= 2]) or seq_len > 30000:
                 continue
             for attrs in orfs.values():
                 gene = attrs["gene_name"]
@@ -237,7 +237,7 @@ class Data:
                 else:
                     gene_trxps[gene].append((trx, tsl))
         trx_list = []
-        random.seed(2)
+        random.seed(5)
         for gene, trxps in gene_trxps.items():
             sorted_trx = sorted(trxps, key=lambda x: x[1])
             max_tsl = sorted_trx[0][-1]
@@ -253,7 +253,7 @@ class Data:
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
             #if trx not in trx_list:
             #    continue
-            if ensembl_trx[trx]['biotype'] == 'nmd' or seq_len > 30000:
+            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items() if y['MS'] >= 2 or y['TE'] >= 2]) or seq_len > 30000:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
@@ -276,7 +276,7 @@ class Data:
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
+                if orf.startswith('ENSP') and (attrs['MS'] >= 2 or attrs['TE'] >= 2):
                     exclude = 'y'
                 if attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
