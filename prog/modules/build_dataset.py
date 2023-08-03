@@ -262,13 +262,6 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
-                if torch.count_nonzero(seq_tensor) < 500:
-                    dataset[trx+'_n1'] = {'mapped_seq': n_mask(seq, seed=1, pct=25),
-                                        'mapped_cds': seq_tensor.view(1,-1),
-                                        'chromosome': chr}
-                    dataset[trx+'_n2'] = {'mapped_seq': n_mask(seq, seed=2, pct=25),
-                                        'mapped_cds': seq_tensor.view(1,-1),
-                                        'chromosome': chr}
         return dataset
     
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):

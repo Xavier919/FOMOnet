@@ -43,8 +43,14 @@ if __name__ == "__main__":
     X_train, y_train = train
     X_test, y_test = test
 
+
+    #synthetic data
+    X_train = [n_mask(x, seed=2, pct=15) for x in X_train] + X_train
+    y_train = y_train + y_train
+
     #convert to one-hot encoding
     X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
+
 
     #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)
