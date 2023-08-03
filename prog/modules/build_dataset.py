@@ -247,13 +247,11 @@ class Data:
         return trx_list
     
     def dataset(self, ensembl_trx, trx_orfs):
-        #trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            #if trx not in trx_list:
-            #    continue
-            if ensembl_trx[trx]["biotype"] != "protein_coding" or not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items() if y['MS'] >= 2 or y['TE'] >= 2]) or seq_len > 30000:
+            if trx not in trx_list:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
@@ -264,6 +262,13 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
+                if torch.count_nonzero(seq_tensor) < 500:
+                    dataset[trx+'_n1'] = {'mapped_seq': n_mask(seq, seed=1, pct=25),
+                                        'mapped_cds': seq_tensor.view(1,-1),
+                                        'chromosome': chr}
+                    dataset[trx+'_n2'] = {'mapped_seq': n_mask(seq, seed=2, pct=25),
+                                        'mapped_cds': seq_tensor.view(1,-1),
+                                        'chromosome': chr}
         return dataset
     
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
