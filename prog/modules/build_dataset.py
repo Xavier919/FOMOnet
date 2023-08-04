@@ -253,14 +253,19 @@ class Data:
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
             #if trx not in trx_list:
             #    continue
-            if ensembl_trx[trx]['biotype'] == 'nmd' or seq_len > 30000:
+            if ensembl_trx[trx]['biotype'] != 'protein_coding' or seq_len > 30000:
+                continue
+            if len(find_orfs(seq)) != len(ensembl_trx[trx]['orf_accessions']):
                 continue
             seq_tensor = torch.zeros(seq_len)
+            skip = False
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') and (attrs['MS'] >= 2 or attrs['TE'] >= 2):
+                if orf.startswith('ENSP') and attrs['MS'] < 2 and attrs['TE'] < 2:
+                    skip = True
+                elif attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
-            if 1 in seq_tensor:
+            if 1 in seq_tensor and skip == False:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}

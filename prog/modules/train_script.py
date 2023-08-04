@@ -36,6 +36,7 @@ if __name__ == "__main__":
     print(f'learning rate:{args.lr}\n')
     print(f'batch size:{args.batch_size}\n')
     print(f'kernel:{args.kernel}\n')
+    print(f'dropout:{args.dropout}\n')
 
     split = pickle.load(open(args.split, 'rb'))
     train, test, trxps = split
