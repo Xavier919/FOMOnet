@@ -18,10 +18,8 @@ class FOMOnet(nn.Module):
         self.conv4 = self.conv_block(128, 256, k=k)
         self.conv5 = self.conv_block(256, 512, k=k)
         self.conv6 = self.conv_block(512, 1024, k=k)
-        self.conv7 = self.conv_block(1024, 2048, k=k)
-        self.conv8 = self.conv_block(2048, 2048, k=k)
+        self.conv7 = self.conv_block(1024, 1024, k=k)
         #decoder convolutional blocks
-        self.dconv6 = self.conv_block(2048, 1024, k=k)
         self.dconv5 = self.conv_block(1024, 512, k=k)
         self.dconv4 = self.conv_block(512, 256, k=k)
         self.dconv3 = self.conv_block(256, 128, k=k)
@@ -29,7 +27,6 @@ class FOMOnet(nn.Module):
         self.dconv1 = self.conv_block(64, 32, k=k)
         self.dconvf = self.final_block(32, 1, k=k)
         #decoder upsampling operations
-        self.upsample6 = nn.ConvTranspose1d(in_channels=2048, out_channels=1024, kernel_size=2, stride=2)
         self.upsample5 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
         self.upsample3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=2, stride=2)
@@ -72,23 +69,11 @@ class FOMOnet(nn.Module):
 
         #encoder layer 6
         block6 = self.conv6(x) 
-        x = self.maxpool(block6)
-        x = self.dropout(x)
+        x = self.dropout(block6)
 
         #encoder layer 7
         block7 = self.conv7(x) 
         x = self.dropout(block7)
-
-        #encoder layer 8
-        block8 = self.conv8(x) 
-        x = self.dropout(block8)
-
-        #decoder layer 6
-        upsamp6 = self.upsample6(x)
-        cropped6 = self.crop(upsamp6, block6)
-        cat6 = torch.cat((upsamp6, cropped6), 1)
-        x = self.dconv6(cat6)
-        x = self.dropout(x)
 
         #decoder layer 5
         upsamp5 = self.upsample5(x)
