@@ -35,7 +35,6 @@ def get_loss(X, y, out, loss_fct):
     #return mean loss
     return (loss_sums/lens).mean()
 
-#TODO frame representation... 
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
