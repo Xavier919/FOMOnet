@@ -18,7 +18,7 @@ class FOMOnet(nn.Module):
         self.conv4 = self.conv_block(128, 256, k=k)
         self.conv5 = self.conv_block(256, 512, k=k)
         self.conv6 = self.conv_block(512, 1024, k=k)
-        self.conv7 = self.conv_block(1024, 1024, k=k)
+        self.convb = self.conv_block(1024, 1024, k=k)
         #decoder convolutional blocks
         self.dconv5 = self.conv_block(1024, 512, k=k)
         self.dconv4 = self.conv_block(512, 256, k=k)
@@ -71,8 +71,8 @@ class FOMOnet(nn.Module):
         block6 = self.conv6(x) 
         x = self.dropout(block6)
 
-        #encoder layer 7
-        block7 = self.conv7(x) 
+        #encoder bottleneck layer
+        block7 = self.convb(x) 
         x = self.dropout(block7)
 
         #decoder layer 5
@@ -120,15 +120,15 @@ class FOMOnet(nn.Module):
         block = nn.Sequential(
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
@@ -137,7 +137,7 @@ class FOMOnet(nn.Module):
     def final_block(in_channels, out_channels, k=1):
         block = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size=k, padding='same'),
-            nn.GELU(),
+            nn.PReLU(),
             nn.BatchNorm1d(out_channels),
         )
         return block
