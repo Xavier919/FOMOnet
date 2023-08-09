@@ -74,29 +74,41 @@ def find_orfs(seq, long=True, nc=False):
     orfs = sorted(orfs, key=lambda x: x[0])
     return orfs
 
-def pred_orfs(out, seq, window_size=7, threshold=0.5):
-    pred_orfs = []
-    out = out.numpy()
-    ws = window_size
-    for start, stop in find_orfs(seq):
-        if start < ws:
-            start_window = out[:start+ws]
-        else:
-            start_window = out[start-ws:start+ws]
-        min_val, max_val = np.min(start_window), np.max(start_window)
-        min_index = np.unravel_index(np.argmin(start_window), start_window.shape)
-        max_index = np.unravel_index(np.argmax(start_window), start_window.shape)
-        if (max_val - min_val >= threshold and max_index > min_index) or (start < ws and any(i >= 0.5 for i in start_window)):
-            if len(seq) < stop+ws:
-                stop_window = out[stop-ws:]
-            else:
-                stop_window = out[stop-ws:stop+ws]
-            min_val, max_val = np.min(stop_window), np.max(stop_window)
-            min_index = np.unravel_index(np.argmin(stop_window), stop_window.shape)
-            max_index = np.unravel_index(np.argmax(stop_window), stop_window.shape)
-            if (max_val - min_val >= threshold and max_index < min_index) or (len(seq) < stop+ws and any(i >= 0.5 for i in stop_window)):
-                pred_orfs.append((start, stop))
-    return pred_orfs
+def check_drop(w, t):
+    return t <= np.max(w)-np.min(w)
+
+def get_window(out, idx, w_size):
+    if idx < w_size:
+        return out[:idx+w_size+3]
+    elif idx+w_size+3 > len(out):
+        return out[idx-w_size:]
+    else:
+        return out[idx-w_size:idx+w_size+3]
+
+def valid_start(start, stops, idx):
+    return any(i > start for i in stops[idx+1:])
+
+def orf_retrieval(seq, out, t = 0.5, w_size = 10):
+    start_codons, stop_codons = ['ATG','CTG','GTG','TTG'], ['TGA','TAG','TAA']
+    cds = []
+    seq_len = len(seq)
+    for frame in range(3):
+        stops = [i for i in range(frame, seq_len, 3) if seq[i:i+3] in stop_codons][::-1]
+        for idx, stop in enumerate(stops):
+            w = get_window(out, stop, w_size)
+            starts = [i for i in range(stop-3,-1,-3) if seq[i:i+3] in start_codons]
+            if len(starts) == 0 or not check_drop(w, t):
+                continue
+            best_codon, best_codon_idx = None, None
+            for start in starts:
+                w = get_window(out, start, w_size)[::-1]
+                if valid_start(start, stops, idx) or not check_drop(w, t):
+                    continue
+                if best_codon == None or best_codon_idx < start:
+                    best_codon, best_codon_idx = seq[start:start+3], start
+            if best_codon != None:
+                cds.append((best_codon_idx, stop+3))
+    return cds
 
 def build_fasta(data, filename):
     trx_seqs = []

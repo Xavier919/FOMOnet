@@ -27,14 +27,14 @@ parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    
+
     split = pickle.load(open(args.split, 'rb'))
     train, test, trxps = split
 
-    X_train, y_train = train
-    X_test, y_test = test
-
-    X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
+    seqs_train, y_train = train
+    seqs_test, y_test = test
+    
+    X_train, X_test = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_test]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
-    fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)  
+    fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)
 
     if torch.cuda.device_count() > 1:
         print("Using", torch.cuda.device_count(), "GPUs")
@@ -56,23 +56,6 @@ if __name__ == "__main__":
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
     loss_function = nn.BCELoss(reduction='none').to(device) 
 
-    #pre-processing data for pytorch DataLoader
-    #train_set = Transcripts(X_train, y_train)
-    #test_set = Transcripts(X_test, y_test)
-
-    #hyperparameters
-    #batch_size = args.batch_size
-    #epochs = args.epochs
-
-    #create DataLoader object for train & test data
-    #train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
-    #test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
-
-    #instantiate model, optimizer and loss function
-    #fomonet = FOMOnet(k=args.kernel, p=args.dropout).cuda()
-
-    #optimizer = optim.Adam(fomonet.parameters(), args.lr)
-    #loss_function = nn.BCELoss(reduction='none').cuda()
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
     print(f'batch size:{args.batch_size}\n')
