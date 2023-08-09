@@ -110,8 +110,7 @@ if __name__ == "__main__":
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet)
 
-    checkpoint = torch.load(args.model)
-    fomonet.load_state_dict(checkpoint['model_state_dict'])
+    fomonet.load_state_dict(torch.load(args.model))
 
     preds = get_preds(fomonet, X_test)
 
