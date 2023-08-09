@@ -74,8 +74,11 @@ def find_orfs(seq, long=True, nc=False):
     orfs = sorted(orfs, key=lambda x: x[0])
     return orfs
 
-def check_drop(w, t):
-    return t <= np.max(w)-np.min(w)
+def check_drop(w, t, edge):
+    if edge:
+        return np.all(w) >= t
+    else:
+        return t <= np.max(w)-np.min(w)
 
 def get_window(out, idx, w_size):
     if idx < w_size:
@@ -88,7 +91,7 @@ def get_window(out, idx, w_size):
 def valid_start(start, stops, idx):
     return any(i > start for i in stops[idx+1:])
 
-def orf_retrieval(seq, out, t = 0.5, w_size = 10):
+def orf_retrieval(seq, out, t = 0.25, w_size = 10):
     start_codons, stop_codons = ['ATG','CTG','GTG','TTG'], ['TGA','TAG','TAA']
     cds = []
     seq_len = len(seq)
