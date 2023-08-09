@@ -93,7 +93,7 @@ if __name__ == "__main__":
             test_losses.append(test_loss)
         if np.mean(test_losses) < best_model:
             best_model = np.mean(test_losses)
-            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
+            torch.save(fomonet.module.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
 
     writer.flush()
