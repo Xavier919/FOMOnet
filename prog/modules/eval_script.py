@@ -106,11 +106,11 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     fomonet = FOMOnet(k=args.kernel).to(device)
-    #if torch.cuda.device_count() > 1:
-    #    print("Using", torch.cuda.device_count(), "GPUs")
-    #    fomonet = nn.DataParallel(fomonet)
+    if torch.cuda.device_count() > 1:
+        print("Using", torch.cuda.device_count(), "GPUs")
+        fomonet = nn.DataParallel(fomonet)
 
-    fomonet.load_state_dict(torch.load(args.model), map_location=device)
+    fomonet.load_state_dict(torch.load(args.model))
 
     preds = get_preds(fomonet, X_test)
 

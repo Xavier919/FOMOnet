@@ -13,7 +13,7 @@ def map_pred(X, y):
     plt.xlim(0, len(preds))
     plt.show()
 
-def map_preds(report, trx_orfs, ensembl_trx, coordinates, n_display=5): 
+def map_preds(report, trx_orfs, ensembl_trx, n_display=5): 
     n=0
     for idx, trx in enumerate(report.keys()):
         n+=1
@@ -22,11 +22,11 @@ def map_preds(report, trx_orfs, ensembl_trx, coordinates, n_display=5):
             print('recall:', report[trx]['recall']), print('iou:', report[trx]['iou'])
             print('biotype:', ensembl_trx[trx]['biotype'])
             print('gene:', ensembl_trx[trx]['gene_name'])
-            print('predicted orfs:', coordinates[trx])
+            print('predicted orfs:', report[trx]['pred_orfs'])
             targets = []
             orfs = dict()
             for orf, attrs in trx_orfs[trx].items():
-                if attrs['MS'] >= 2 or attrs['TE'] >= 2 or orf.startswith('ENSP'):
+                if orf.startswith('ENSP'):
                     targets.append((attrs['start'], attrs['stop']))
                 orfs[orf] = {'start':attrs['start'],
                             'stop':attrs['stop'],

@@ -102,7 +102,7 @@ def orf_retrieval(seq, out, t = 0.5, w_size = 10):
             best_codon, best_codon_idx = None, None
             for start in starts:
                 w = get_window(out, start, w_size)[::-1]
-                if valid_start(start, stops, idx) or not check_drop(w, t):
+                if valid_start(start, stops, idx) or not check_drop(w, t) or stop - start < 90:
                     continue
                 if best_codon == None or best_codon_idx < start:
                     best_codon, best_codon_idx = seq[start:start+3], start
