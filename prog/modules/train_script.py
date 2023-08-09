@@ -5,8 +5,6 @@ import torch.optim as optim
 from torch import nn
 import pickle
 from torch.utils.tensorboard import SummaryWriter
-import os
-import shutil
 import numpy as np
 import torch.nn as nn
 #project specific imports
@@ -15,9 +13,6 @@ from transcripts import Transcripts
 from utils import *
 import argparse
 
-#create runs directory for curves visualization with tensorboard
-#shutil.rmtree(f'runs/', ignore_errors=True)
-#os.mkdir('runs')
 writer = SummaryWriter()
 test_writer = SummaryWriter()
 
@@ -32,44 +27,57 @@ parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    print(f'tag:{args.tag}\n')
-    print(f'learning rate:{args.lr}\n')
-    print(f'batch size:{args.batch_size}\n')
-    print(f'kernel:{args.kernel}\n')
-    print(f'dropout:{args.dropout}\n')
-
+    
     split = pickle.load(open(args.split, 'rb'))
     train, test, trxps = split
 
     X_train, y_train = train
     X_test, y_test = test
 
-
-    #synthetic data
-    #X_train = [n_mask(x, seed=2, pct=15) for x in X_train] + X_train + [n_mask(x, seed=3, pct=15) for x in X_train]
-    #y_train = y_train + y_train + y_train
-
-    #convert to one-hot encoding
     X_train, X_test = [map_seq(x) for x in X_train], [map_seq(x) for x in X_test]
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    #pre-processing data for pytorch DataLoader
     train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)
 
-    #hyperparameters
     batch_size = args.batch_size
     epochs = args.epochs
 
-    #create DataLoader object for train & test data
     train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
     test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
 
-    #instantiate model, optimizer and loss function
-    fomonet = FOMOnet(k=args.kernel, p=args.dropout).cuda()
+    fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)  
+
+    if torch.cuda.device_count() > 1:
+        print("Using", torch.cuda.device_count(), "GPUs")
+        fomonet = nn.DataParallel(fomonet) 
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
-    loss_function = nn.BCELoss(reduction='none').cuda()
+    loss_function = nn.BCELoss(reduction='none').to(device) 
+
+    #pre-processing data for pytorch DataLoader
+    #train_set = Transcripts(X_train, y_train)
+    #test_set = Transcripts(X_test, y_test)
+
+    #hyperparameters
+    #batch_size = args.batch_size
+    #epochs = args.epochs
+
+    #create DataLoader object for train & test data
+    #train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+    #test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+
+    #instantiate model, optimizer and loss function
+    #fomonet = FOMOnet(k=args.kernel, p=args.dropout).cuda()
+
+    #optimizer = optim.Adam(fomonet.parameters(), args.lr)
+    #loss_function = nn.BCELoss(reduction='none').cuda()
+    print(f'tag:{args.tag}\n')
+    print(f'learning rate:{args.lr}\n')
+    print(f'batch size:{args.batch_size}\n')
+    print(f'kernel:{args.kernel}\n')
+    print(f'dropout:{args.dropout}\n')
 
     #train model
     best_model = 1.0

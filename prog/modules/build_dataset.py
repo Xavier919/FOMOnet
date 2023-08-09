@@ -228,7 +228,7 @@ class Data:
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
             seq_len, tsl, biotype = len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'].split(' ')[0], ensembl_trx[trx]['biotype']
-            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items() if y['MS'] >= 2 or y['TE'] >= 2]) or seq_len > 30000 or biotype == 'nmd':
+            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or seq_len > 30000 or biotype == 'nmd':
                 continue
             for attrs in orfs.values():
                 gene = attrs["gene_name"]
@@ -256,7 +256,7 @@ class Data:
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') and (attrs['MS'] >= 2 or attrs['TE'] >= 2):
+                if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
             if 1 in seq_tensor:
                 dataset[trx] = {'mapped_seq': seq,
