@@ -247,11 +247,13 @@ class Data:
         return trx_list
     
     def dataset(self, ensembl_trx, trx_orfs):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+        #trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            if trx not in trx_list:
+            seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
+            #if trx not in trx_list:
+            #    continue
+            if biotype == 'nmd':
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
