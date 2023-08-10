@@ -81,12 +81,15 @@ def check_drop(w, t, edge):
         return t <= np.max(w)-np.min(w)
 
 def get_window(out, idx, w_size):
+    edge = False
     if idx < w_size:
-        return out[:idx+w_size+3]
+        edge = True
+        return edge, out[:idx+w_size+3]
     elif idx+w_size+3 > len(out):
-        return out[idx-w_size:]
+        edge = True
+        return edge, out[idx-w_size:]
     else:
-        return out[idx-w_size:idx+w_size+3]
+        return edge, out[idx-w_size:idx+w_size+3]
 
 def valid_start(start, stops, idx):
     return any(i > start for i in stops[idx+1:])
@@ -98,14 +101,14 @@ def orf_retrieval(seq, out, t = 0.25, w_size = 10):
     for frame in range(3):
         stops = [i for i in range(frame, seq_len, 3) if seq[i:i+3] in stop_codons][::-1]
         for idx, stop in enumerate(stops):
-            w = get_window(out, stop, w_size)
+            e, w = get_window(out, stop, w_size)
             starts = [i for i in range(stop-3,-1,-3) if seq[i:i+3] in start_codons]
-            if len(starts) == 0 or not check_drop(w, t):
+            if len(starts) == 0 or not check_drop(w, t, e):
                 continue
             best_codon, best_codon_idx = None, None
             for start in starts:
-                w = get_window(out, start, w_size)[::-1]
-                if valid_start(start, stops, idx) or not check_drop(w, t) or stop - start < 90:
+                e, w = get_window(out, start, w_size)
+                if valid_start(start, stops, idx) or not check_drop(w[::-1], t, e) or stop - start < 90:
                     continue
                 if best_codon == None or best_codon_idx < start:
                     best_codon, best_codon_idx = seq[start:start+3], start
