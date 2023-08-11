@@ -27,7 +27,7 @@ def get_loss(X, y, out, loss_fct):
     zero_mask = torch.all(X == 0, dim=1)
     zero_mask = zero_mask.unsqueeze(1)
     zero_mask = zero_mask.expand(-1, 1, -1)
-    loss[zero_mask] = 0.
+    #loss[zero_mask] = 0.
     lens = torch.sum(X, dim=(1,-1))
     loss_sums = torch.sum(loss, dim=(1,-1))
     return (loss_sums/lens).mean()
