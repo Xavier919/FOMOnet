@@ -46,7 +46,7 @@ def recall_score(target, output):
 def get_preds(model, X_test):
     preds = []
     model.eval()
-    for X in zip(X_test):
+    for X in X_test:
         pad = torch.zeros(4,5000)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X).view(-1)
