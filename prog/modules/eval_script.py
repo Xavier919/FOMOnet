@@ -43,33 +43,41 @@ def recall_score(target, output):
     recall = true_positives / (true_positives + false_negatives + 1e-7)
     return recall.item()
 
-def get_preds(model, X_test, y_test):
-    out_y = []
+def get_preds(model, X_test):
+    preds = []
     model.eval()
-    for X, y in zip(X_test, y_test):
+    for X in zip(X_test):
         pad = torch.zeros(4,5000)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
-        out_y.append((out, y))
-    return out_y
+        preds.append(out)
+    return preds
 
-def get_report(preds, seqs_test, y_test, trxps):
-    report = dict()
-    outputs = dict()
+#def get_report(preds, seqs_test, y_test, trxps):
+#    report = dict()
+#    outputs = dict()
+#    for idx, out in enumerate(preds):
+#        out = out[0]
+#        trx = trxps[idx]
+#        seq_test = seqs_test[idx]
+#        target = y_test[idx].view(-1)
+#        pred = bin_pred(out, 0.5)
+#        recall = recall_score(target, pred)
+#        iou = iou_score(target, pred)
+#        report[trx] = {'pred_orfs': orf_retrieval(seq_test, out.numpy()),
+#                       'iou': iou,
+#                       'recall': recall}
+#        outputs[trx] = {'out': out.numpy()}
+#    return report, outputs
+
+def get_orfs(preds, seqs_test, trxps):
+    orfs = dict()
     for idx, out in enumerate(preds):
-        out = out[0]
         trx = trxps[idx]
         seq_test = seqs_test[idx]
-        target = y_test[idx].view(-1)
-        pred = bin_pred(out, 0.5)
-        recall = recall_score(target, pred)
-        iou = iou_score(target, pred)
-        report[trx] = {'pred_orfs': orf_retrieval(seq_test, out.numpy()),
-                       'iou': iou,
-                       'recall': recall}
-        outputs[trx] = {'out': out.numpy()}
-    return report, outputs
+        orfs[trx] = orf_retrieval(seq_test, out.numpy())
+    return orfs
 
 if __name__ == "__main__":
 
@@ -89,10 +97,9 @@ if __name__ == "__main__":
 
     fomonet.load_state_dict(torch.load(args.model))
 
-    out_y = get_preds(fomonet, X_test, y_test)
+    preds = get_preds(fomonet, X_test)
 
-    report, outputs = get_report(out_y, seqs_test, y_test, trxps)
+    orfs = get_orfs(preds, seqs_test, trxps)
 
-    pickle.dump(out_y, open(f'out_y_{args.tag}.pkl', 'wb'))
-    pickle.dump(report, open(f'report_{args.tag}.pkl', 'wb'))
-    pickle.dump(outputs, open(f'outputs_{args.tag}.pkl', 'wb'))
+    pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
+    pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
