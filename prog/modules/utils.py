@@ -4,7 +4,7 @@ import numpy as np
 
 def pad_seqs(seqs, num_chan):
     pad_seqs = []
-    max_len = max([x.shape[1] for x in seqs])+500
+    max_len = max([x.shape[1] for x in seqs])+100
     for seq in seqs:
         diff_len = max_len - seq.shape[1]
         padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)
@@ -27,7 +27,7 @@ def get_loss(X, y, out, loss_fct):
     zero_mask = torch.all(X == 0, dim=1)
     zero_mask = zero_mask.unsqueeze(1)
     zero_mask = zero_mask.expand(-1, 1, -1)
-    #loss[zero_mask] = 0.
+    loss[zero_mask] = 0.
     lens = torch.sum(X, dim=(1,-1))
     loss_sums = torch.sum(loss, dim=(1,-1))
     return (loss_sums/lens).mean()
