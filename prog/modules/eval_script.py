@@ -47,7 +47,7 @@ def get_preds(model, X_test):
     preds = []
     model.eval()
     for X in X_test:
-        pad = torch.zeros(4,5000)
+        pad = torch.zeros(4,X.shape[-1])
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
