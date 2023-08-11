@@ -247,13 +247,11 @@ class Data:
         return trx_list
     
     def dataset(self, ensembl_trx, trx_orfs):
-        #trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            #if trx not in trx_list:
-            #    continue
-            if biotype == 'nmd' or seq_len > 30000:
+            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
+            if trx not in trx_list:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
@@ -266,25 +264,21 @@ class Data:
                                 'chromosome': chr}
         return dataset
     
-    def alt_dataset(self, ensembl_trx, trx_orfs):
-        #trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+    def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            if biotype == 'nmd' or seq_len > 30000:
+            if biotype not in biotypes or seq_len > 30000 or trx in trx_list:
                 continue
-            skip = 'n'
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP'):
-                    skip = 'y'
                 if attrs['MS'] >= 2 or attrs['TE'] >= 2:
                     seq_tensor[start:stop] = 1
-            if skip == 'n':
-                dataset[trx] = {'mapped_seq': seq,
-                                'mapped_cds': seq_tensor.view(1,-1),
-                                'chromosome': chr}
+            dataset[trx] = {'mapped_seq': seq,
+                            'mapped_cds': seq_tensor.view(1,-1),
+                            'chromosome': chr}
         return dataset
     
     def split_dataset(self, dataset, tag):

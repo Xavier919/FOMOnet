@@ -43,65 +43,42 @@ def recall_score(target, output):
     recall = true_positives / (true_positives + false_negatives + 1e-7)
     return recall.item()
 
-def pr_curve(preds, target):
-    preds = cat(preds)
-    target = cat(target).long()
-    pr_curve = PrecisionRecallCurve(pos_label=1,task="binary")
-    precision, recall, _ = pr_curve(preds, target)
-    auc_pr = auc(recall, precision)
-    plt.plot(recall, precision, color = 'black')
-    plt.ylim(0, 1), plt.xlim(0, 1)
-    plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
-    plt.legend(['PR AUC: {}'.format(round(auc_pr, 3))])
-    plt.savefig('pr_curve.svg')
-    plt.show()
-    
-def roc_curve(preds, target):
-    preds = cat(preds).detach().numpy()
-    target = cat(target).long().detach().numpy()
-    fpr, tpr, _ = metrics.roc_curve(target, preds)
-    roc_auc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, color = 'black')
-    plt.ylim(0, 1), plt.xlim(0, 1)
-    plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
-    plt.legend(['ROC AUC: {}'.format(round(roc_auc, 3))])
-    plt.savefig('roc_curve.svg')
-    plt.show()
-
-def get_preds(model, X_test):
-    preds = []
+def get_preds(model, X_test, y_test):
+    out_y = []
     model.eval()
-    for X in X_test:
+    for X, y in zip(X_test, y_test):
         pad = torch.zeros(4,5000)
-        X_ = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
-        out = model(X_).view(-1)
-        preds.append(out[pad.shape[1]:-pad.shape[1]].cpu().detach())
-    return preds
+        X = torch.cat([pad,X,pad],dim=1).view(1,4,-1)
+        out = model(X).view(-1)
+        out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
+        out_y.append((out, y))
+    return out_y
 
 def get_report(preds, seqs_test, y_test, trxps):
     report = dict()
+    outputs = dict()
     for idx, out in enumerate(preds):
+        out = out[0]
         trx = trxps[idx]
         seq_test = seqs_test[idx]
         target = y_test[idx].view(-1)
         pred = bin_pred(out, 0.5)
         recall = recall_score(target, pred)
         iou = iou_score(target, pred)
-        report[trx] = {'out': out,
-                       'pred_orfs': orf_retrieval(seq_test, out.numpy()),
+        report[trx] = {'pred_orfs': orf_retrieval(seq_test, out.numpy()),
                        'iou': iou,
                        'recall': recall}
-    return report
+        outputs[trx] = {'out': out.numpy()}
+    return report, outputs
 
 if __name__ == "__main__":
 
     split = pickle.load(open(args.split, 'rb'))
-    train, test, trxps = split
+    _, test, trxps = split
 
-    seqs_train, y_train = train
     seqs_test, y_test = test
     
-    X_train, X_test = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_test]
+    X_test = [map_seq(x) for x in seqs_test]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -112,7 +89,10 @@ if __name__ == "__main__":
 
     fomonet.load_state_dict(torch.load(args.model))
 
-    preds = get_preds(fomonet, X_test)
+    out_y = get_preds(fomonet, X_test, y_test)
 
-    report = get_report(preds, seqs_test, y_test, trxps)
+    report, outputs = get_report(out_y, seqs_test, y_test, trxps)
+
+    pickle.dump(out_y, open(f'out_y_{args.tag}.pkl', 'wb'))
     pickle.dump(report, open(f'report_{args.tag}.pkl', 'wb'))
+    pickle.dump(outputs, open(f'outputs_{args.tag}.pkl', 'wb'))
