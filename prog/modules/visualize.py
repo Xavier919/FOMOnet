@@ -13,16 +13,16 @@ def map_pred(X, y):
     plt.xlim(0, len(preds))
     plt.show()
 
-def map_preds(report, trx_orfs, ensembl_trx, n_display=5): 
+def map_preds(report, trx_orfs, ensembl_trx, preds, n_display=5): 
     n=0
     for idx, trx in enumerate(report.keys()):
         n+=1
-        print(trx)
         if trx in trx_orfs:
-            print('recall:', report[trx]['recall']), print('iou:', report[trx]['iou'])
             print('biotype:', ensembl_trx[trx]['biotype'])
             print('gene:', ensembl_trx[trx]['gene_name'])
-            print('predicted orfs:', report[trx]['pred_orfs'])
+            print('chromosome:', ensembl_trx[trx]['chromosome'])
+            print(trx)
+            print(report[trx])
             targets = []
             orfs = dict()
             for orf, attrs in trx_orfs[trx].items():
@@ -36,6 +36,6 @@ def map_preds(report, trx_orfs, ensembl_trx, n_display=5):
             orfs = {k:v for k,v in sorted(orfs.items(), key=lambda item:item[1]['start'])}
             for key, value in orfs.items():
                 print(key, ' : ', value)
-        map_pred(report[trx]['out'], targets)
+        map_pred(preds[idx], targets)
         if n==n_display:
             break
