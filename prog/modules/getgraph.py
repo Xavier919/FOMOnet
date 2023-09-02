@@ -24,7 +24,7 @@ parser.add_argument('split6')
 args = parser.parse_args()
 
 def PR_curve(list_preds, list_targets):
-    pr_curve = PrecisionRecallCurve(pos_label=1)
+    pr_curve = PrecisionRecallCurve(pos_label=1, task='binary')
     #mean curve
     cat_preds = cat([x.flatten() for y in list_preds for x in y])
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long()
@@ -45,26 +45,26 @@ def PR_curve(list_preds, list_targets):
     plt.show()
     plt.clf()
 
-    def ROC_curve(list_preds, list_targets):
-        #mean curve
-        cat_preds = cat([x.flatten() for y in list_preds for x in y]).detach().numpy()
-        cat_targets = cat([x.flatten() for y in list_targets for x in y]).long().detach().numpy()
+def ROC_curve(list_preds, list_targets):
+    #mean curve
+    cat_preds = cat([x.flatten() for y in list_preds for x in y]).detach().numpy()
+    cat_targets = cat([x.flatten() for y in list_targets for x in y]).long().detach().numpy()
+    fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
+    auc_roc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, color = 'black', linewidth=1)
+    #individual curves
+    for preds, targets in zip(list_preds, list_targets):
+        cat_preds = cat([x.flatten() for x in preds]).detach().numpy()
+        cat_targets = cat([x.flatten() for x in targets]).long().detach().numpy()
         fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
-        auc_roc = auc(fpr, tpr)
-        plt.plot(fpr, tpr, color = 'black', linewidth=1)
-        #individual curves
-        for preds, targets in zip(list_preds, list_targets):
-            cat_preds = cat([x.flatten() for x in preds]).detach().numpy()
-            cat_targets = cat([x.flatten() for x in targets]).long().detach().numpy()
-            fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
-            plt.scatter(fpr, tpr, color = 'green', s=0.05)
-        
-        plt.ylim(0.95, 1.01), plt.xlim(0, 1)
-        plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
-        plt.legend(['ROC auc: {}'.format(round(auc_roc, 10))])
-        plt.savefig('roc_curve.svg')
-        plt.show()
-        plt.clf()
+        plt.scatter(fpr, tpr, color = 'green', s=0.05)
+    
+    plt.ylim(0.95, 1.01), plt.xlim(0, 1)
+    plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
+    plt.legend(['ROC auc: {}'.format(round(auc_roc, 10))])
+    plt.savefig('roc_curve.svg')
+    plt.show()
+    plt.clf()
 
 if __name__ == "__main__":
     split1 = pickle.load(open(args.split1, 'rb'))
