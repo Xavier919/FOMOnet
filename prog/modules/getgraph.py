@@ -41,7 +41,7 @@ def PR_curve(list_preds, list_targets):
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
     plt.xlabel("recall"), plt.ylabel("precision"), plt.title('precision-recall curve')
     plt.legend(['PR auc: {}'.format(round(auc_pr, 10))])
-    plt.savefig('pr_curve.svg')
+    plt.savefig('pr_curve.png')
     plt.show()
     plt.clf()
 
@@ -62,7 +62,7 @@ def ROC_curve(list_preds, list_targets):
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
     plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
     plt.legend(['ROC auc: {}'.format(round(auc_roc, 10))])
-    plt.savefig('roc_curve.svg')
+    plt.savefig('roc_curve.png')
     plt.show()
     plt.clf()
 
