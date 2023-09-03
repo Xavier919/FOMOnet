@@ -30,16 +30,16 @@ def PR_curve(list_preds, list_targets):
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long()
     precision, recall, _ = pr_curve(cat_preds, cat_targets)
     auc_pr = auc(recall, precision)
-    plt.plot(recall, precision, color = 'black', linewidth=1)
+    plt.plot(recall, precision, color = 'black', linewidth=0.5)
     #individual curves
     for preds, targets in zip(list_preds, list_targets):
         cat_preds = cat([x.flatten() for x in preds])
         cat_targets = cat([x.flatten() for x in targets]).long()
         precision, recall, _ = pr_curve(cat_preds, cat_targets)
-        plt.scatter(recall, precision, color = 'green', s=0.05)
+        plt.plot(recall, precision, color = 'green', linewidth=0.1)
     
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
-    plt.xlabel("recall"), plt.ylabel("precision"), plt.title('precision-recall curve')
+    plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
     plt.legend(['PR auc: {}'.format(round(auc_pr, 10))])
     plt.savefig('pr_curve.png')
     plt.show()
@@ -51,16 +51,16 @@ def ROC_curve(list_preds, list_targets):
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long().detach().numpy()
     fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
     auc_roc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, color = 'black', linewidth=1)
+    plt.plot(fpr, tpr, color = 'black', linewidth=0.5)
     #individual curves
     for preds, targets in zip(list_preds, list_targets):
         cat_preds = cat([x.flatten() for x in preds]).detach().numpy()
         cat_targets = cat([x.flatten() for x in targets]).long().detach().numpy()
         fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
-        plt.scatter(fpr, tpr, color = 'green', s=0.05)
+        plt.plot(fpr, tpr, color = 'green', linewidth=0.1)
     
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
-    plt.xlabel("FPR"), plt.ylabel("TPR"), plt.title('ROC curve')
+    plt.xlabel("False positive rate"), plt.ylabel("True positive rate"), plt.title('ROC curve')
     plt.legend(['ROC auc: {}'.format(round(auc_roc, 10))])
     plt.savefig('roc_curve.png')
     plt.show()
