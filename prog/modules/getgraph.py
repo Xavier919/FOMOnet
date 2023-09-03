@@ -40,7 +40,7 @@ def PR_curve(list_preds, list_targets):
     
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
     plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
-    plt.legend(['PR auc: {}'.format(round(auc_pr, 4))])
+    plt.legend(['PR auc: {}'.format(round(auc_pr, 3))])
     plt.savefig('pr_curve.png')
     plt.show()
     plt.clf()
@@ -61,7 +61,7 @@ def ROC_curve(list_preds, list_targets):
     
     plt.ylim(0.95, 1.01), plt.xlim(0, 1)
     plt.xlabel("False positive rate"), plt.ylabel("True positive rate"), plt.title('ROC curve')
-    plt.legend(['ROC auc: {}'.format(round(auc_roc, 4))])
+    plt.legend(['ROC auc: {}'.format(round(auc_roc, 3))])
     plt.savefig('roc_curve.png')
     plt.show()
     plt.clf()
