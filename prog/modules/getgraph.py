@@ -30,7 +30,7 @@ def PR_curve(list_preds, list_targets):
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long()
     precision, recall, _ = pr_curve(cat_preds, cat_targets)
     auc_pr = auc(recall, precision)
-    plt.plot(recall, precision, color = 'black', linewidth=0.5)
+    plt.plot(recall, precision, color = 'black', linewidth=1)
     #individual curves
     for preds, targets in zip(list_preds, list_targets):
         cat_preds = cat([x.flatten() for x in preds])
@@ -51,7 +51,7 @@ def ROC_curve(list_preds, list_targets):
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long().detach().numpy()
     fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
     auc_roc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, color = 'black', linewidth=0.5)
+    plt.plot(fpr, tpr, color = 'black', linewidth=1)
     #individual curves
     for preds, targets in zip(list_preds, list_targets):
         cat_preds = cat([x.flatten() for x in preds]).detach().numpy()
