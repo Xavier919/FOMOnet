@@ -94,7 +94,7 @@ def get_window(out, idx, w_size):
 def valid_start(start, stops, idx):
     return any(i > start for i in stops[idx+1:])
 
-def orf_retrieval(seq, out, t = 0.5, w_size = 7):
+def orf_retrieval(seq, out, t = 0.5, w_size = 7, cds_cov = 0.75):
     start_codons, stop_codons = ['ATG','CTG','GTG','TTG'], ['TGA','TAG','TAA']
     cds = []
     seq_len = len(seq)
@@ -109,6 +109,8 @@ def orf_retrieval(seq, out, t = 0.5, w_size = 7):
             for start in starts:
                 e, w = get_window(out, start, w_size)
                 if valid_start(start, stops, idx) or not check_drop(w[::-1], t, e) or stop - start < 90:
+                    continue
+                if np.sum(out[start:stop] >= t)/(stop-start) < cds_cov:
                     continue
                 if best_codon == None or best_codon_idx < start:
                     best_codon, best_codon_idx = seq[start:start+3], start
