@@ -95,7 +95,7 @@ def valid_start(start, stops, idx):
     return any(i > start for i in stops[idx+1:])
 
 def orf_retrieval(seq, out, t = 0.25, w_size = 7, cds_cov = 0.75):
-    start_codons, stop_codons = ['ATG','CTG','GTG','TTG'], ['TGA','TAG','TAA']
+    start_codons, stop_codons = ['ATG'], ['TGA','TAG','TAA']
     cds = []
     seq_len = len(seq)
     for frame in range(3):
