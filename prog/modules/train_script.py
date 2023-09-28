@@ -9,6 +9,7 @@ import numpy as np
 import torch.nn as nn
 #project specific imports
 from model import FOMOnet
+from batch_sampler import BatchSampler
 from transcripts import Transcripts
 from utils import *
 import argparse
@@ -44,8 +45,14 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     epochs = args.epochs
 
-    train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
-    test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+    #train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+    #test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
+    
+    train_sampler = BatchSampler(train_set, batch_size)
+    train_loader = DataLoader(train_set, batch_sampler=train_sampler, collate_fn=utility_fct, num_workers=8)
+
+    test_sampler = BatchSampler(test_set, batch_size)
+    test_loader = DataLoader(test_set, batch_sampler=test_sampler, collate_fn=utility_fct, num_workers=8)
 
     fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)
 
