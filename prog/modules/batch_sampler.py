@@ -1,34 +1,28 @@
 import torch
 import numpy as np
 
-class BatchSampler(torch.utils.data.Sampler):
-    def __init__(self, data_source, batch_size):
+class LengthBatchSampler(torch.utils.data.Sampler):
+    def __init__(self, data_source, batch_size, num_classes=15):
         self.data_source = data_source
         self.batch_size = batch_size
+        self.num_classes = num_classes
 
-    def _batch_indices(self, indices):
-        batch = []
-        max_len = 0
-        min_len = float('inf')
-        for idx in indices:
-            seq_len = len(self.data_source[idx][0])
-            if len(batch) < self.batch_size and seq_len - min_len <= 500 and max_len - seq_len <= 500:
-                batch.append(idx)
-                max_len = max(max_len, seq_len)
-                min_len = min(min_len, seq_len)
-            else:
-                yield batch
-                batch = [idx]
-                max_len = seq_len
-                min_len = seq_len
-        if batch:
-            yield batch
+        # Divide sequences into length-based classes
+        self.indices = list(range(len(data_source)))
+        self.indices.sort(key=lambda x: len(data_source[x][0]))
+        self.class_bins = np.array_split(self.indices, self.num_classes)
+
+    def _batch_indices(self):
+        # Flatten the list of bins and shuffle
+        all_indices = [idx for bin in self.class_bins for idx in bin]
+        np.random.shuffle(all_indices)
+
+        # Yield batches from the shuffled indices
+        for i in range(0, len(all_indices), self.batch_size):
+            yield all_indices[i:i+self.batch_size]
 
     def __iter__(self):
-        indices = list(range(len(self.data_source)))
-        np.random.shuffle(indices)  
-        indices.sort(key=lambda x: len(self.data_source[x][0]))  
-        return iter(self._batch_indices(indices))
+        return iter(self._batch_indices())
 
     def __len__(self):
         return len(self.data_source) // self.batch_size
