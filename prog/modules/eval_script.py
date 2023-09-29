@@ -100,12 +100,12 @@ if __name__ == "__main__":
 
     fomonet.load_state_dict(torch.load(args.model))
 
-    #preds = get_preds(fomonet, X_test)
+    preds = get_preds(fomonet, X_test)
 
-    #orfs = get_orfs(preds, seqs_test, trxps)
+    orfs = get_orfs(preds, seqs_test, trxps)
 
-    #pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
-    #pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
+    pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
+    pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
 
     masked_iou = get_mask_iou(fomonet, X_test, y_test)
 
