@@ -69,26 +69,10 @@ def get_mask_iou(model, X_test, y_test):
             out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
             pred = bin_pred(out, 0.5)
             iou = iou_score(y, pred)
+            print(iou)
             iou_list.append(iou)
         iou_lists.append(iou_list)
     return iou_lists
-
-#def get_report(preds, seqs_test, y_test, trxps):
-#    report = dict()
-#    outputs = dict()
-#    for idx, out in enumerate(preds):
-#        out = out[0]
-#        trx = trxps[idx]
-#        seq_test = seqs_test[idx]
-#        target = y_test[idx].view(-1)
-#        pred = bin_pred(out, 0.5)
-#        recall = recall_score(target, pred)
-#        iou = iou_score(target, pred)
-#        report[trx] = {'pred_orfs': orf_retrieval(seq_test, out.numpy()),
-#                       'iou': iou,
-#                       'recall': recall}
-#        outputs[trx] = {'out': out.numpy()}
-#    return report, outputs
 
 def get_orfs(preds, seqs_test, trxps):
     orfs = dict()
@@ -116,12 +100,12 @@ if __name__ == "__main__":
 
     fomonet.load_state_dict(torch.load(args.model))
 
-    preds = get_preds(fomonet, X_test)
+    #preds = get_preds(fomonet, X_test)
 
-    orfs = get_orfs(preds, seqs_test, trxps)
+    #orfs = get_orfs(preds, seqs_test, trxps)
 
-    pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
-    pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
+    #pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
+    #pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
 
     masked_iou = get_mask_iou(fomonet, X_test, y_test)
 
