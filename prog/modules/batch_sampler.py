@@ -19,7 +19,9 @@ class BatchSampler(torch.utils.data.Sampler):
 
         # Yield batches from the shuffled indices
         for i in range(0, len(all_indices), self.batch_size):
-            yield all_indices[i:i+self.batch_size]
+            batch = all_indices[i:i+self.batch_size]
+            if len(batch) == self.batch_size:  # Only yield complete batches
+                yield batch
 
     def __iter__(self):
         return iter(self._batch_indices())
