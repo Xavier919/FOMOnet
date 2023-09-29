@@ -120,3 +120,4 @@ if __name__ == "__main__":
 
     pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
+    pickle.dump(masked_iou, open(f'masked_iou_{args.tag}.pkl', 'wb'))
