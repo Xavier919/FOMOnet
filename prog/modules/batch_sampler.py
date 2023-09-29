@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 class BatchSampler(torch.utils.data.Sampler):
-    def __init__(self, data_source, batch_size, num_classes=15):
+    def __init__(self, data_source, batch_size, num_classes=30):
         self.data_source = data_source
         self.batch_size = batch_size
         self.num_classes = num_classes
