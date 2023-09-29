@@ -119,8 +119,9 @@ if __name__ == "__main__":
 
     orfs = get_orfs(preds, seqs_test, trxps)
 
-    masked_iou = get_mask_iou(fomonet, X_test, y_test)
-
     pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
+
+    masked_iou = get_mask_iou(fomonet, X_test, y_test)
+
     pickle.dump(masked_iou, open(f'masked_iou_{args.tag}.pkl', 'wb'))
