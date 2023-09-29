@@ -57,7 +57,7 @@ def get_mask_iou(model, X_test, y_test):
     w_size = 7
     for X,y in (X_test,y_test):
         iou_list = []
-        for i in range(0,len(X)-w_size):
+        for i in range(0,len(X)-w_size,3):
             X_ = X
             X_[i:i+w_size] = [0.,0.,0.,0.]
             X_ = torch.cat([pad,X_,pad],dim=1).view(1,4,-1).cuda()
@@ -115,6 +115,8 @@ if __name__ == "__main__":
     preds = get_preds(fomonet, X_test)
 
     orfs = get_orfs(preds, seqs_test, trxps)
+
+    masked_iou = get_mask_iou(fomonet, X_test, y_test)
 
     pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
