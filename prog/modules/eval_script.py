@@ -55,11 +55,8 @@ def get_mask_iou(model, X_test, y_test):
     model.eval()
     pad = torch.zeros(4,1000)
     w_size = 7
-    count = 0
     for X,y in zip(X_test,y_test):
         iou_list = []
-        count += 1
-        print(count)
         for i in range(0,len(X)-w_size,3):
             X_ = X.T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
@@ -67,9 +64,13 @@ def get_mask_iou(model, X_test, y_test):
             X_ = torch.cat([pad,X_,pad],dim=1).view(1,4,-1).cuda()
             out = model(X_).view(-1)
             out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
+            print(out)
             pred = bin_pred(out, 0.5)
+            print(pred)
             iou = iou_score(y, pred)
+            print(iou)
             iou_list.append(iou)
+        print(iou_list)
         iou_lists.append(iou_list)
     return iou_lists
 
