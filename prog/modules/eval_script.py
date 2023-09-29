@@ -55,9 +55,14 @@ def get_mask_iou(model, X_test, y_test):
     model.eval()
     w_size = 7
     pad = torch.zeros(4,1000)
+    count = 0
+    print('hola')
     for X,y in zip(X_test,y_test):
         iou_list = []
-        for i in range(0,X.shape[-1][0],3):
+        count += 1
+        print(count)
+        print('hola')
+        for i in range(0,X.shape[-1],3):
             X_ = X.T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
             X_ = X_.T
