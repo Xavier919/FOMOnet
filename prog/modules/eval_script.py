@@ -54,13 +54,9 @@ def get_mask_iou(model, X_test, y_test):
     iou_lists = []
     model.eval()
     w_size = 7
-    count = 0
     for X,y in zip(X_test,y_test):
         iou_list = []
-        count += 1
-        print(count)
-        for i in range(0,X.shape[-1],3):
-            pad = torch.zeros(4,1000)
+        for i in range(0,X.shape[-1][0],3):
             X_ = X.T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
             X_ = X_.T
@@ -79,7 +75,7 @@ def get_orfs(preds, seqs_test, trxps):
     for idx, out in enumerate(preds):
         trx = trxps[idx]
         seq_test = seqs_test[idx]
-        orfs[trx] = orf_retrieval(seq_test, out.numpy())
+        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.5, w_size = 10, cds_cov = 0.75)
     return orfs
 
 if __name__ == "__main__":
