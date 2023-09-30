@@ -71,6 +71,8 @@ def get_mask_iou(model, X_test, y_test):
             pred = bin_pred(out, 0.5)
             iou = iou_score(y, pred)
             iou_list.append(iou)
+            iou_list.append(iou)
+            iou_list.append(iou)
         iou_lists.append(iou_list)
     return iou_lists
 
