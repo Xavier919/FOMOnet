@@ -61,8 +61,8 @@ def get_mask_iou(model, X_test, y_test):
         iou_list = []
         count += 1
         print(count)
-        for i in range(0,X.shape[-1],3):
-            X_ = X.T
+        for i in range(0,X.shape[-1]-w_size,3):
+            X_ = X.clone().T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
             X_ = X_.T
             X_ = torch.cat([pad,X_,pad],dim=1).view(1,4,-1).cuda()
