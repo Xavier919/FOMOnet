@@ -81,7 +81,7 @@ def get_orfs(preds, seqs_test, trxps):
     for idx, out in enumerate(preds):
         trx = trxps[idx]
         seq_test = seqs_test[idx]
-        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.5, w_size = 10, cds_cov = 0.75)
+        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.5, w_size = 7, cds_cov = 0.75)
     return orfs
 
 if __name__ == "__main__":
