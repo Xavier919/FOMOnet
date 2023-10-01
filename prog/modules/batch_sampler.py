@@ -13,12 +13,19 @@ class BatchSampler(torch.utils.data.Sampler):
         self.class_bins = np.array_split(self.indices, self.num_classes)
 
     def _batch_indices(self):
+        all_batches = []
         # Shuffle indices within each bin separately
         for bin in self.class_bins:
             np.random.shuffle(bin)
+            for i in range(0, len(bin), self.batch_size):
+                batch = bin[i:i+self.batch_size]
+                if len(batch) != self.batch_size:
+                    continue
+                all_batches.append(batch)
+        np.random.shuffle(all_batches)
 
         # Flatten the list of shuffled bins
-        all_indices = [idx for bin in self.class_bins for idx in bin]
+        all_indices = [batch for batches in all_batches for batch in batches]
 
         # Yield batches from the shuffled indices
         for i in range(0, len(all_indices), self.batch_size):
