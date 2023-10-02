@@ -42,7 +42,7 @@ def get_preds(model, X_test):
     preds = []
     model.eval()
     for X in X_test:
-        pad = torch.zeros(4,1000)
+        pad = torch.zeros(4,2000)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
@@ -53,14 +53,10 @@ def get_preds(model, X_test):
 def get_mask_iou(model, X_test, y_test):
     iou_lists = []
     model.eval()
-    w_size = 7
-    pad = torch.zeros(4,1000)
-    count = 0
-    print('hola')
+    w_size = 5
+    pad = torch.zeros(4,2000)
     for X,y in zip(X_test,y_test):
         iou_list = []
-        count += 1
-        print(count)
         for i in range(0,X.shape[-1]-w_size,3):
             X_ = X.clone().T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
