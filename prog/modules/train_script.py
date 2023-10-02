@@ -55,10 +55,10 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_set, batch_sampler=test_sampler, collate_fn=utility_fct, num_workers=8)
 
     fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)
-
     if torch.cuda.device_count() > 1:
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet) 
+        
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
     loss_function = nn.BCELoss(reduction='none').to(device) 
