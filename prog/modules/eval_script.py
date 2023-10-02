@@ -89,10 +89,11 @@ def get_xFOMO(model, X_test, y_test):
             batch = masked_X[i:i+batch_size]
             size = len(batch)
             batch = pad_seqs(batch, 4, min_pad=0).cuda()
-            batch = batch.view(size,4,-1)
+            batch = batch.view(size, 4, -1)
             outputs = model(batch).view(size,1,-1)
             print(outputs)
             for out in outputs:
+                out = out.flatten()
                 print(out)
                 out = out[pad_length:-pad_length].cpu().detach()
                 print(out)
