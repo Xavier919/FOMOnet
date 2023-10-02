@@ -98,6 +98,8 @@ def get_xFOMO(model, X_test, y_test):
                 iou = iou_score(y, pred)
                 xscores.append(iou)
         list_xscores.append(xscores)
+        print(len(list_xscores))
+    return list_xscores
 
 def get_orfs(preds, seqs_test, trxps):
     orfs = dict()
