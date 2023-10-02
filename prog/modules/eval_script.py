@@ -42,7 +42,7 @@ def get_preds(model, X_test):
     preds = []
     model.eval()
     for X in X_test:
-        pad = torch.zeros(4,2000)
+        pad = torch.zeros(4,X.shape[-1]//2)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
@@ -54,10 +54,10 @@ def get_mask_iou(model, X_test, y_test):
     iou_lists = []
     model.eval()
     w_size = 5
-    pad = torch.zeros(4,2000)
     for X,y in zip(X_test,y_test):
         iou_list = []
-        for i in range(0,X.shape[-1]-w_size,3):
+        pad = torch.zeros(4,X.shape[-1]//2)
+        for i in range(0,X.shape[-1]):
             X_ = X.clone().T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
             X_ = X_.T
@@ -67,8 +67,6 @@ def get_mask_iou(model, X_test, y_test):
             pred = bin_pred(out, 0.5)
             iou = iou_score(y, pred)
             iou_list.append(iou)
-            iou_list.append(iou)
-            iou_list.append(iou)
         iou_lists.append(iou_list)
     return iou_lists
 
@@ -77,7 +75,7 @@ def get_orfs(preds, seqs_test, trxps):
     for idx, out in enumerate(preds):
         trx = trxps[idx]
         seq_test = seqs_test[idx]
-        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.25, w_size = 10, cds_cov = 0.75)
+        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.25, w_size = 7, cds_cov = 0.75)
     return orfs
 
 if __name__ == "__main__":
