@@ -82,7 +82,8 @@ def get_xFOMO(model, X_test, y_test):
         pad_length, X_length = pad.shape[-1], X.shape[-1]
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
         for i in range(pad_length,pad_length+X_length):
-            X_ = X.clone().T
+            X_ = X.clone()
+            X_ = X_.T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
             masked_X.append(X_.T)
         for i in range(0, len(masked_X), batch_size):
