@@ -42,7 +42,7 @@ def get_preds(model, X_test):
     preds = []
     model.eval()
     for X in X_test:
-        pad = torch.zeros(4,X.shape[-1]//2)
+        pad = torch.zeros(4,2000)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
@@ -57,7 +57,7 @@ def get_xFOMO(model, X_test, y_test):
     for X,y in zip(X_test,y_test):
         xscores = []
         masked_X = []
-        pad = torch.zeros(4,X.shape[-1]//2)
+        pad = torch.zeros(4,2000)
         pad_length, X_length = pad.shape[-1], X.shape[-1]
         X = torch.cat([pad,X,pad],dim=1).view(4,-1)
         for i in range(pad_length,pad_length+X_length):
