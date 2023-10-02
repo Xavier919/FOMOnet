@@ -2,9 +2,9 @@ import torch
 import random
 import numpy as np
 
-def pad_seqs(seqs, num_chan):
+def pad_seqs(seqs, num_chan, min_pad=100):
     pad_seqs = []
-    max_len = max([x.shape[1] for x in seqs])+100
+    max_len = max([x.shape[1] for x in seqs])+min_pad
     for seq in seqs:
         diff_len = max_len - seq.shape[1]
         padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)

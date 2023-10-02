@@ -50,25 +50,51 @@ def get_preds(model, X_test):
     return preds
 
 
-def get_mask_iou(model, X_test, y_test):
-    iou_lists = []
+#def get_mask_iou(model, X_test, y_test):
+#    iou_lists = []
+#    model.eval()
+#    w_size = 5
+#    for X,y in zip(X_test,y_test):
+#        iou_list = []
+#        pad = torch.zeros(4,X.shape[-1]//2)
+#        for i in range(0,X.shape[-1]):
+#            X_ = X.clone().T
+#            X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
+#            X_ = X_.T
+#            X_ = torch.cat([pad,X_,pad],dim=1).view(1,4,-1).cuda()
+#            out = model(X_).view(-1)
+#            out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
+#            pred = bin_pred(out, 0.5)
+#            iou = iou_score(y, pred)
+#            iou_list.append(iou)
+#        iou_lists.append(iou_list)
+#    return iou_lists
+
+def get_xFOMO(model, X_test, y_test):
     model.eval()
+    list_xscores = []
     w_size = 5
+    batch_size = 16
     for X,y in zip(X_test,y_test):
-        iou_list = []
+        xscores = []
+        masked_X = []
         pad = torch.zeros(4,X.shape[-1]//2)
-        for i in range(0,X.shape[-1]):
+        pad_length, X_length = pad.shape[-1], X.shape[-1]
+        X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
+        for i in range(pad_length,pad_length+X_length):
             X_ = X.clone().T
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
-            X_ = X_.T
-            X_ = torch.cat([pad,X_,pad],dim=1).view(1,4,-1).cuda()
-            out = model(X_).view(-1)
-            out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
-            pred = bin_pred(out, 0.5)
-            iou = iou_score(y, pred)
-            iou_list.append(iou)
-        iou_lists.append(iou_list)
-    return iou_lists
+            masked_X.append(X_.T)
+        for i in range(0, len(masked_X), batch_size):
+            batch = masked_X[i:i+batch_size]
+            batch = pad_seqs(batch, 4, min_pad=0)
+            outputs = model(batch).view(len(batch),1,-1)
+            for out in outputs:
+                out = out[pad_length:-pad_length].cpu().detach()
+                pred = bin_pred(out, 0.5)
+                iou = iou_score(y, pred)
+                xscores.append(iou)
+        list_xscores.append(xscores)
 
 def get_orfs(preds, seqs_test, trxps):
     orfs = dict()
@@ -96,13 +122,13 @@ if __name__ == "__main__":
 
     fomonet.load_state_dict(torch.load(args.model))
 
-    preds = get_preds(fomonet, X_test)
+    #preds = get_preds(fomonet, X_test)
 
-    orfs = get_orfs(preds, seqs_test, trxps)
+    #orfs = get_orfs(preds, seqs_test, trxps)
 
-    pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
-    pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
+    #pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
+    #pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
 
-    masked_iou = get_mask_iou(fomonet, X_test, y_test)
+    xFOMO = get_xFOMO(fomonet, X_test, y_test)
 
-    pickle.dump(masked_iou, open(f'masked_iou_{args.tag}.pkl', 'wb'))
+    pickle.dump(xFOMO, open(f'xFOMO{args.tag}.pkl', 'wb'))
