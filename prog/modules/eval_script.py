@@ -85,7 +85,7 @@ def get_orfs(preds, seqs_test, trxps):
     for idx, out in enumerate(preds):
         trx = trxps[idx]
         seq_test = seqs_test[idx]
-        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.25, w_size = 7, cds_cov = 0.75)
+        orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.5, w_size = 10, cds_cov = 0.75)
     return orfs
 
 if __name__ == "__main__":
@@ -97,26 +97,14 @@ if __name__ == "__main__":
     
     X_test = [map_seq(x) for x in seqs_test]
 
-    #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    #fomonet = FOMOnet(k=args.kernel).to(device)
-    #if torch.cuda.device_count() > 1:
-    #    print("Using", torch.cuda.device_count(), "GPUs")
-    #    fomonet = nn.DataParallel(fomonet)
-    #checkpoint = torch.load(args.model)
-    #state_dict = {key.replace("module.", ""): value for key, value in checkpoint.items()}
-    #fomonet.load_state_dict(state_dict)
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     fomonet = FOMOnet(k=args.kernel).to(device)
-    # Load the checkpoint first
-    checkpoint = torch.load(args.model, map_location=device)
-    state_dict = {key.replace("module.", ""): value for key, value in checkpoint['state_dict'].items()}
-    # If you have multiple GPUs, then use DataParallel
     if torch.cuda.device_count() > 1:
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet)
-
+    checkpoint = torch.load(args.model)
+    state_dict = {key.replace("module.", ""): value for key, value in checkpoint.items()}
     fomonet.load_state_dict(state_dict)
 
     preds = get_preds(fomonet, X_test)
