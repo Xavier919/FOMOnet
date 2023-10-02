@@ -89,8 +89,11 @@ def get_xFOMO(model, X_test, y_test):
             batch = masked_X[i:i+batch_size]
             batch = pad_seqs(batch, 4, min_pad=0).cuda()
             outputs = model(batch).view(len(batch),1,-1)
+            print(outputs)
             for out in outputs:
+                print(out)
                 out = out[pad_length:-pad_length].cpu().detach()
+                print(out)
                 pred = bin_pred(out, 0.5)
                 iou = iou_score(y, pred)
                 xscores.append(iou)
