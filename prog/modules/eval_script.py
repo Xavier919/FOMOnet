@@ -114,6 +114,6 @@ if __name__ == "__main__":
     pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
 
-    xFOMO = get_xFOMO(fomonet, X_test, y_test)
+    #xFOMO = get_xFOMO(fomonet, X_test, y_test)
 
-    pickle.dump(xFOMO, open(f'xFOMO{args.tag}.pkl', 'wb'))
+    #pickle.dump(xFOMO, open(f'xFOMO{args.tag}.pkl', 'wb'))
