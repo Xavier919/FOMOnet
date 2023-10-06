@@ -62,7 +62,6 @@ if __name__ == "__main__":
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
     #loss_function = nn.BCELoss(reduction='none').to(device) 
-    loss_function = nn.CrossEntropyLoss(reduction='mean').to(device) 
 
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
@@ -81,7 +80,7 @@ if __name__ == "__main__":
             y = y.view(size,2,-1).cuda()
             outputs = fomonet(X).view(size,2,-1)
             fomonet.zero_grad()
-            loss = get_loss(X, y, outputs, loss_function)
+            loss = get_loss(X, y, outputs)
             #loss = loss_function(outputs, y)
             loss.backward()
             optimizer.step()
@@ -96,7 +95,7 @@ if __name__ == "__main__":
             X = X.view(size,4,-1).cuda()
             y = y.view(size,2,-1).cuda()
             outputs = fomonet(X).view(size,2,-1)
-            test_loss = get_loss(X, y, outputs, loss_function)
+            test_loss = get_loss(X, y, outputs)
             #test_loss = loss_function(outputs, y)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)

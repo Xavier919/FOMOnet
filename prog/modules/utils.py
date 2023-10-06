@@ -32,8 +32,8 @@ def get_loss(X, y, out, loss_fct):
     loss_sums = torch.sum(loss, dim=(1,-1))
     return (loss_sums/lens).mean()
 
-def get_loss(X, y, out, loss_fct):
-    loss = loss_fct(out, y).cuda()
+def get_loss(X, y, out):
+    loss = torch.nn.functional.cross_entropy(out, y, reduction='none').cuda()
     lens = torch.sum(X, dim=(1,-1))
     loss_sums = torch.sum(loss, dim=(-1))
     return (loss_sums/lens).mean()
