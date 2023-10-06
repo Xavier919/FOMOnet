@@ -33,12 +33,10 @@ def get_loss(X, y, out, loss_fct):
     return (loss_sums/lens).mean()
 
 def get_loss(X, y, out, loss_fct):
-    zero_mask = torch.any(X == 1, dim=1)
-    zero_mask = zero_mask.unsqueeze(1)
-    zero_mask = zero_mask.expand(X.shape[0], 2, -1)
-    out = out[zero_mask].view(X.shape[0], 2, -1)
-    y = out[zero_mask].view(X.shape[0], 2, -1)
-    return loss_fct(out, y).cuda()
+    loss = loss_fct(out, y).cuda()
+    lens = torch.sum(X, dim=(1,-1))
+    loss_sums = torch.sum(loss, dim=(-1))
+    return (loss_sums/lens).mean()
 
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
