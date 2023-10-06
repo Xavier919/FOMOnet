@@ -25,7 +25,7 @@ class FOMOnet(nn.Module):
         self.dconv3 = self.conv_block(256, 128, k=k)
         self.dconv2 = self.conv_block(128, 64, k=k)
         self.dconv1 = self.conv_block(64, 32, k=k)
-        self.dconvf = self.final_block(32, 1, k=k)
+        self.dconvf = self.final_block(32, 2, k=k)
         #decoder upsampling operations
         self.upsample5 = nn.ConvTranspose1d(in_channels=1024, out_channels=512, kernel_size=2, stride=2)
         self.upsample4 = nn.ConvTranspose1d(in_channels=512, out_channels=256, kernel_size=2, stride=2)
@@ -34,6 +34,7 @@ class FOMOnet(nn.Module):
         self.upsample1 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=2, stride=2)
         #output function
         self.sigmoid = nn.Sigmoid()
+        self.softmax = nn.Softmax(dim=1)
 
     def crop(self, x, enc_ftrs):
         chs, dims = x.shape[1:]
@@ -113,7 +114,8 @@ class FOMOnet(nn.Module):
         #decoder layer f (final layer)
         x = self.dconvf(x)
         x = F.interpolate(x, init_shape)
-        return self.sigmoid(x)
+        #return self.sigmoid(x)
+        return self.softmax(x)
 
     @staticmethod
     def conv_block(in_channels, out_channels, k=5):

@@ -264,6 +264,25 @@ class Data:
                                 'chromosome': chr}
         return dataset
     
+    def dataset(self, ensembl_trx, trx_orfs):
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+        dataset = dict()
+        for trx, orfs in tqdm(trx_orfs.items()):
+            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
+            if trx not in trx_list:
+                continue
+            seq_tensor = torch.cat([torch.ones(1, seq_len), torch.zeros(1, seq_len)], dim=0)
+            for orf, attrs in orfs.items():
+                start, stop = attrs['start'], attrs['stop']
+                if orf.startswith('ENSP'):
+                    seq_tensor[0][start:stop] = 0
+                    seq_tensor[1][start:stop] = 1
+            if 1 in seq_tensor:
+                dataset[trx] = {'mapped_seq': seq,
+                                'mapped_cds': seq_tensor.view(2,-1),
+                                'chromosome': chr}
+        return dataset
+    
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()

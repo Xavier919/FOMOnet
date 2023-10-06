@@ -14,7 +14,7 @@ def pad_seqs(seqs, num_chan, min_pad=100):
 
 def utility_fct(Xy):
     seq1, seq2 = zip(*Xy)
-    X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
+    X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 2)
     return (X, y)
 
 def find_cds_coordinates(trx, cds):
