@@ -35,7 +35,7 @@ def get_loss(X, y, out, loss_fct):
 def get_loss(X, y, out, loss_fct):
     zero_mask = torch.any(X == 1, dim=1)
     zero_mask = zero_mask.unsqueeze(1)
-    zero_mask = zero_mask.expand(-1, 2, -1)
+    zero_mask = zero_mask.expand(X.shape[0], 2, -1)
     out = out[zero_mask].view(X.shape[0], 2, -1)
     y = out[zero_mask].view(X.shape[0], 2, -1)
     return loss_fct(out, y).cuda()
