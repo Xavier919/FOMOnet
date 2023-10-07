@@ -228,7 +228,7 @@ class Data:
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
             seq_len, tsl, biotype = len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'].split(' ')[0], ensembl_trx[trx]['biotype']
-            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or seq_len > 20000 or biotype == 'nmd':
+            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or seq_len > 30000 or biotype == 'nmd':
                 continue
             for attrs in orfs.values():
                 gene = attrs["gene_name"]
@@ -271,20 +271,18 @@ class Data:
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
             if trx not in trx_list:
                 continue
-            seq_tensor = torch.zeros(1, seq_len)
-            seq_tensor_3 = torch.zeros(3, seq_len)
+            seq_tensor = torch.zeros(seq_len)
+            #seq_tensor_3 = torch.zeros(3, seq_len)
             for orf, attrs in orfs.items():
                 start, stop = attrs['start'], attrs['stop']
-                condition_1 = orf.startswith('ENSP')
-                condition_2 = attrs['MS'] >= 3 or attrs['TE'] >= 3
-
-                if condition_1 or condition_2:
-                    mask = (seq_tensor[start:stop] == 0) | (seq_tensor[start:stop] == 1)
-                    seq_tensor[start:stop][mask] += 1
-            for x,y in enumerate(seq_tensor):
-                seq_tensor_3[y.long()][x] = 1
+                if orf.startswith('ENSP') or (attrs['MS'] >= 3 or attrs['TE'] >= 3):
+                    seq_tensor[start:stop] += 1
+            if 3 in seq_tensor or 4 in seq_tensor:
+                continue
+            #for x,y in enumerate(seq_tensor):
+            #    seq_tensor_3[y.long()][x] = 1
             dataset[trx] = {'mapped_seq': seq,
-                            'mapped_cds': seq_tensor_3.view(3,-1),
+                            'mapped_cds': seq_tensor,
                             'chromosome': chr}
         return dataset
     

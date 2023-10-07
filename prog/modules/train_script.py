@@ -37,6 +37,22 @@ if __name__ == "__main__":
     
     X_train, X_test = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_test]
 
+    y_train_ = []
+    for y_ in y_train:
+        seq_tensor = torch.zeros(3, len(y_))
+        for x,y in enumerate(y_):
+            seq_tensor[y.long()][x] = 1
+        y_train_.append(seq_tensor)
+
+    y_test_ = []
+    for y_ in y_test:
+        seq_tensor = torch.zeros(3, len(y_))
+        for x,y in enumerate(y_):
+            seq_tensor[y.long()][x] = 1
+        y_test_.append(seq_tensor)
+
+    y_train, y_test = y_train_, y_test_
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_set = Transcripts(X_train, y_train)
