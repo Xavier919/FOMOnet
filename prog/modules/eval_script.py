@@ -52,7 +52,7 @@ def get_preds(model, X_test):
 def get_xFOMO(model, X_test, y_test):
     model.eval()
     list_xscores = []
-    w_size = 5
+    w_size = 7
     batch_size = 8
     for X,y in zip(X_test,y_test):
         xscores = []
