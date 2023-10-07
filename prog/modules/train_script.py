@@ -74,8 +74,8 @@ if __name__ == "__main__":
         for X, y in train_loader:
             size = len(X)
             X = X.view(size,4,-1).cuda()
-            y = y.view(size,2,-1).cuda()
-            outputs = fomonet(X).view(size,2,-1)
+            y = y.view(size,3,-1).cuda()
+            outputs = fomonet(X).view(size,3,-1)
             fomonet.zero_grad()
             loss = get_loss(X, y, outputs)
             #loss = loss_function(outputs, y)
@@ -90,8 +90,8 @@ if __name__ == "__main__":
         for X, y in test_loader:
             size = len(X)
             X = X.view(size,4,-1).cuda()
-            y = y.view(size,2,-1).cuda()
-            outputs = fomonet(X).view(size,2,-1)
+            y = y.view(size,3,-1).cuda()
+            outputs = fomonet(X).view(size,3,-1)
             test_loss = get_loss(X, y, outputs)
             #test_loss = loss_function(outputs, y)
             test_loss = test_loss.cpu().detach().numpy()
