@@ -44,9 +44,6 @@ if __name__ == "__main__":
 
     batch_size = args.batch_size
     epochs = args.epochs
-
-    #train_loader = DataLoader(train_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
-    #test_loader = DataLoader(test_set, batch_size=batch_size, collate_fn=utility_fct, shuffle=True, num_workers=8)
     
     train_sampler = BatchSampler(train_set, batch_size)
     train_loader = DataLoader(train_set, batch_sampler=train_sampler, collate_fn=utility_fct, num_workers=8)

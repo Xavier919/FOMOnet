@@ -115,7 +115,7 @@ class FOMOnet(nn.Module):
         x = self.dconvf(x)
         x = F.interpolate(x, init_shape)
         #return self.sigmoid(x)
-        return self.softmax(x)
+        return x
 
     @staticmethod
     def conv_block(in_channels, out_channels, k=5):
