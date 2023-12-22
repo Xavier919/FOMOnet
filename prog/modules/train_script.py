@@ -14,8 +14,6 @@ from transcripts import Transcripts
 from utils import *
 import argparse
 
-#hello
-
 writer = SummaryWriter()
 test_writer = SummaryWriter()
 

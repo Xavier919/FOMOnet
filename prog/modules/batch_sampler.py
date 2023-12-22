@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 
-#hello
 class BatchSampler(torch.utils.data.Sampler):
     def __init__(self, data_source, batch_size, num_classes=10):
         self.data_source = data_source
