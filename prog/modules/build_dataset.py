@@ -186,8 +186,8 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                #if start_codon not in ['ATG', 'TTG', 'CTG', 'GTG'] or stop_codon not in ['TAA', 'TAG', 'TGA']:
-                #    continue
+                if start_codon not in ['ATG', 'TTG', 'GTG', 'CTG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
+                    continue
                 altprots = dict()
                 if trx not in trx_orfs:
                     altprots[prot_id] = {'MS':int(line["MS score"]),
@@ -262,28 +262,6 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
-        return dataset
-    
-    def dataset(self, ensembl_trx, trx_orfs):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            if trx not in trx_list:
-                continue
-            seq_tensor = torch.zeros(seq_len)
-            #seq_tensor_3 = torch.zeros(3, seq_len)
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if orf.startswith('ENSP') or (attrs['MS'] >= 3 or attrs['TE'] >= 3):
-                    seq_tensor[start:stop] += 1
-            if 3 in seq_tensor or 4 in seq_tensor:
-                continue
-            #for x,y in enumerate(seq_tensor):
-            #    seq_tensor_3[y.long()][x] = 1
-            dataset[trx] = {'mapped_seq': seq,
-                            'mapped_cds': seq_tensor,
-                            'chromosome': chr}
         return dataset
     
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):

@@ -32,13 +32,6 @@ def get_loss(X, y, out, loss_fct):
     loss_sums = torch.sum(loss, dim=(1,-1))
     return (loss_sums/lens).mean()
 
-def get_loss(X, y, out):
-    loss = torch.nn.functional.cross_entropy(out, y, reduction='none').cuda()
-    zero_mask = torch.any(X == 1, dim=1)
-    loss = torch.where(zero_mask, loss, 0)    
-    lens = torch.sum(X, dim=(1,-1))
-    loss_sums = torch.sum(loss, dim=(-1))
-    return (loss_sums/lens).mean()
 
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}

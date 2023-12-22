@@ -37,23 +37,12 @@ if __name__ == "__main__":
     
     X_train, X_test = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_test]
 
-    y_train_ = []
-    for y_ in y_train:
-        seq_tensor = torch.zeros(3, len(y_))
-        for x,y in enumerate(y_):
-            seq_tensor[y.long()][x] = 1
-        y_train_.append(seq_tensor)
-
-    y_test_ = []
-    for y_ in y_test:
-        seq_tensor = torch.zeros(3, len(y_))
-        for x,y in enumerate(y_):
-            seq_tensor[y.long()][x] = 1
-        y_test_.append(seq_tensor)
-
-    y_train, y_test = y_train_, y_test_
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if device.type == 'cuda':
+        print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+    else:
+        print("Using CPU")
 
     train_set = Transcripts(X_train, y_train)
     test_set = Transcripts(X_test, y_test)
@@ -74,7 +63,7 @@ if __name__ == "__main__":
         
 
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
-    #loss_function = nn.BCELoss(reduction='none').to(device) 
+    loss_function = nn.BCELoss(reduction='none').to(device) 
 
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
@@ -90,11 +79,11 @@ if __name__ == "__main__":
         for X, y in train_loader:
             size = len(X)
             X = X.view(size,4,-1).cuda()
-            y = y.view(size,3,-1).cuda()
-            outputs = fomonet(X).view(size,3,-1)
+            y = y.view(size,1,-1).cuda()
+            outputs = fomonet(X).view(size,1,-1)
             fomonet.zero_grad()
             loss = get_loss(X, y, outputs)
-            #loss = loss_function(outputs, y)
+            loss = loss_function(outputs, y)
             loss.backward()
             optimizer.step()
             loss = loss.cpu().detach().numpy()
@@ -106,10 +95,10 @@ if __name__ == "__main__":
         for X, y in test_loader:
             size = len(X)
             X = X.view(size,4,-1).cuda()
-            y = y.view(size,3,-1).cuda()
-            outputs = fomonet(X).view(size,3,-1)
+            y = y.view(size,1,-1).cuda()
+            outputs = fomonet(X).view(size,1,-1)
             test_loss = get_loss(X, y, outputs)
-            #test_loss = loss_function(outputs, y)
+            test_loss = loss_function(outputs, y)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
             test_losses.append(test_loss)
