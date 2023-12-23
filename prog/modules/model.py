@@ -74,6 +74,7 @@ class FOMOnet(nn.Module):
 
         #encoder layer 6
         block6 = self.conv6(x) 
+        x = block6
         #x = self.dropout(block6)
 
         #encoder bottleneck layer
@@ -132,10 +133,7 @@ class FOMOnet(nn.Module):
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.GELU(),
             nn.BatchNorm1d(out_channels),
-            #nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
-            #nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
-            #nn.PReLU(),
-            #nn.BatchNorm1d(out_channels),
+            nn.Conv1d(out_channels, out_channels, kernel_size=k, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=k, groups=out_channels, padding='same'),
             nn.Conv1d(out_channels, out_channels, kernel_size=1, padding='same'),
             nn.GELU(),
