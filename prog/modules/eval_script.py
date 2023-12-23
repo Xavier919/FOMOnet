@@ -100,6 +100,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     fomonet = FOMOnet(k=args.kernel).to(device)
+    
     if torch.cuda.device_count() > 1:
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet)
