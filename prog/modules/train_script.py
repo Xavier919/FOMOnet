@@ -13,6 +13,8 @@ from batch_sampler import BatchSampler
 from transcripts import Transcripts
 from utils import *
 import argparse
+import time
+
 
 writer = SummaryWriter()
 test_writer = SummaryWriter()
@@ -61,7 +63,6 @@ if __name__ == "__main__":
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet) 
         
-
     optimizer = optim.Adam(fomonet.parameters(), args.lr)
     loss_function = nn.BCELoss(reduction='none').to(device) 
 
@@ -70,6 +71,8 @@ if __name__ == "__main__":
     print(f'batch size:{args.batch_size}\n')
     print(f'kernel:{args.kernel}\n')
     print(f'dropout:{args.dropout}\n')
+
+    start_time = time.time()
 
     #train model
     best_model = 1.0
@@ -106,6 +109,10 @@ if __name__ == "__main__":
             best_model = np.mean(test_losses)
             torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
+
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f"Total training time: {total_time} seconds")
 
     writer.flush()
     test_writer.flush()
