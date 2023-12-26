@@ -24,7 +24,7 @@ parser.add_argument('split6')
 args = parser.parse_args()
 
 def PR_curve(list_preds, list_targets):
-    pr_curve = PrecisionRecallCurve(pos_label=1, task='binary')
+    pr_curve = PrecisionRecallCurve(task='binary')
     #mean curve
     cat_preds = cat([x.flatten() for y in list_preds for x in y])
     cat_targets = cat([x.flatten() for y in list_targets for x in y]).long()
