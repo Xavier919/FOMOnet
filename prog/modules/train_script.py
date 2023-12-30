@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     best_model = 1.0
     early_stop_cnt = 0
-    early_stop = 3
+    early_stop = 10
     for epoch in range(epochs):
         fomonet.train()
         losses = []
@@ -105,6 +105,7 @@ if __name__ == "__main__":
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
             test_losses.append(test_loss)
+        print(f'{epoch}_{np.mean(test_losses)}')
 
         if np.mean(test_losses) < best_model:
             best_model = np.mean(test_losses)
@@ -116,9 +117,6 @@ if __name__ == "__main__":
         if early_stop_cnt == early_stop:
             print('early stop')
             break
-
-
-        print(f'{epoch}_{np.mean(test_losses)}')
 
     end_time = time.time()
     total_time = end_time - start_time
