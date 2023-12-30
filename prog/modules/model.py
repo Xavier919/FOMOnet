@@ -78,8 +78,8 @@ class FOMOnet(nn.Module):
         x = self.dropout(block6)
 
         #encoder bottleneck layer
-        #block7 = self.convb(x) 
-        #x = self.dropout(block7)
+        block7 = self.convb(x) 
+        x = self.dropout(block7)
 
         #decoder layer 5
         upsamp5 = self.upsample5(x)
@@ -129,6 +129,10 @@ class FOMOnet(nn.Module):
     @staticmethod
     def conv_block(in_channels, out_channels, k=5):
         block = nn.Sequential(
+            nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
+            nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
+            nn.PReLU(),
+            nn.BatchNorm1d(out_channels),
             nn.Conv1d(in_channels, in_channels, kernel_size=k, groups=in_channels, padding='same'),
             nn.Conv1d(in_channels, out_channels, kernel_size=1, padding='same'),
             nn.PReLU(),
