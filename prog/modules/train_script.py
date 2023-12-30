@@ -74,8 +74,9 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    #train model
     best_model = 1.0
+    early_stop_cnt = 0
+    early_stop = 5
     for epoch in range(epochs):
         fomonet.train()
         losses = []
@@ -86,13 +87,25 @@ if __name__ == "__main__":
             outputs = fomonet(X).view(size,1,-1)
             fomonet.zero_grad()
             loss = get_loss(X, y, outputs, loss_function)
-            #loss = loss_function(outputs, y)
             loss.backward()
             optimizer.step()
             loss = loss.cpu().detach().numpy()
             writer.add_scalar("Loss/train", loss, epoch)
             losses.append(loss)
+
+            if np.mean(losses) < best_model:
+                best_model = np.mean(losses)
+                torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
+                early_stop_cnt = 0
+            else:
+                early_stop_cnt += 1
+            
+            if early_stop_cnt == early_stop:
+                print('early stop')
+                break
+
         print(f'{epoch}_{np.mean(losses)}')
+
         fomonet.eval()
         test_losses = []
         for X, y in test_loader:
@@ -101,13 +114,9 @@ if __name__ == "__main__":
             y = y.view(size,1,-1).cuda()
             outputs = fomonet(X).view(size,1,-1)
             test_loss = get_loss(X, y, outputs, loss_function)
-            #test_loss = loss_function(outputs, y)
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
             test_losses.append(test_loss)
-        if np.mean(test_losses) < best_model:
-            best_model = np.mean(test_losses)
-            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
         print(f'{epoch}_{np.mean(test_losses)}')
 
     end_time = time.time()
