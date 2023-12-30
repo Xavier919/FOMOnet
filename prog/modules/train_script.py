@@ -92,18 +92,6 @@ if __name__ == "__main__":
             loss = loss.cpu().detach().numpy()
             writer.add_scalar("Loss/train", loss, epoch)
             losses.append(loss)
-
-        if np.mean(losses) < best_model:
-            best_model = np.mean(losses)
-            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
-            early_stop_cnt = 0
-        else:
-            early_stop_cnt += 1
-        
-        if early_stop_cnt == early_stop:
-            print('early stop')
-            break
-
         print(f'{epoch}_{np.mean(losses)}')
 
         fomonet.eval()
@@ -117,6 +105,19 @@ if __name__ == "__main__":
             test_loss = test_loss.cpu().detach().numpy()
             test_writer.add_scalar("Loss/test", test_loss, epoch)
             test_losses.append(test_loss)
+
+        if np.mean(test_losses) < best_model:
+            best_model = np.mean(test_losses)
+            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
+            early_stop_cnt = 0
+        else:
+            early_stop_cnt += 1
+        
+        if early_stop_cnt == early_stop:
+            print('early stop')
+            break
+
+
         print(f'{epoch}_{np.mean(test_losses)}')
 
     end_time = time.time()
