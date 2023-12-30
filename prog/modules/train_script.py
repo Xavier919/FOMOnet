@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     best_model = 1.0
     early_stop_cnt = 0
-    early_stop = 5
+    early_stop = 3
     for epoch in range(epochs):
         fomonet.train()
         losses = []
@@ -93,16 +93,16 @@ if __name__ == "__main__":
             writer.add_scalar("Loss/train", loss, epoch)
             losses.append(loss)
 
-            if np.mean(losses) < best_model:
-                best_model = np.mean(losses)
-                torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
-                early_stop_cnt = 0
-            else:
-                early_stop_cnt += 1
-            
-            if early_stop_cnt == early_stop:
-                print('early stop')
-                break
+        if np.mean(losses) < best_model:
+            best_model = np.mean(losses)
+            torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
+            early_stop_cnt = 0
+        else:
+            early_stop_cnt += 1
+        
+        if early_stop_cnt == early_stop:
+            print('early stop')
+            break
 
         print(f'{epoch}_{np.mean(losses)}')
 
