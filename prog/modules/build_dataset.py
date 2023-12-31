@@ -186,7 +186,7 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                if start_codon not in ['ATG','CTG','GTG','TTG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
+                if start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
                     continue
                 altprots = dict()
                 if trx not in trx_orfs:
@@ -262,11 +262,6 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
-                random.seed(42)
-                seq_copy = ''.join(random.sample(seq, len(seq))) 
-                dataset[f'{trx}_s'] = {'mapped_seq': seq_copy,
-                                        'mapped_cds': torch.zeros(seq_len).view(1,-1),
-                                        'chromosome': chr}
         return dataset
 
     

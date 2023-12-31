@@ -41,20 +41,20 @@ def recall_score(target, output):
 def get_preds(model, X_test):
     preds = dict()
     model.eval()
-    for X in X_test:
-        pad = torch.zeros(4,2000)
+    for X in zip(X_test):
+        pad = torch.zeros(4,1000)
         X = torch.cat([pad,X,pad],dim=1).view(1,4,-1).cuda()
         out = model(X).view(-1)
         out = out[pad.shape[1]:-pad.shape[1]].cpu().detach()
         preds.append(out)
     return preds
 
-def get_xFOMO(model, X_test, y_test):
+def get_xFOMO(model, X_test, y_test, trxps):
     model.eval()
-    list_xscores = []
+    trx_xscores = dict()
     w_size = 7
     batch_size = 8
-    for X,y in zip(X_test,y_test):
+    for X,y,trx in zip(X_test,y_test,trxps):
         xscores = []
         masked_X = []
         pad = torch.zeros(4,1000)
@@ -76,9 +76,9 @@ def get_xFOMO(model, X_test, y_test):
                 pred = bin_pred(out, 0.5)
                 iou = iou_score(y, pred)
                 xscores.append(iou)
-        list_xscores.append(xscores)
-        print(len(list_xscores))
-    return list_xscores
+        trx_xscores[trx] = xscores
+        print(len(trx_xscores))
+    return trx_xscores
 
 def get_orfs(preds, seqs_test, trxps):
     orfs = dict()
@@ -115,6 +115,6 @@ if __name__ == "__main__":
     pickle.dump((preds, y_test), open(f'preds_{args.tag}.pkl', 'wb'))
     pickle.dump(orfs, open(f'orfs_{args.tag}.pkl', 'wb'))
 
-    xFOMO = get_xFOMO(fomonet, X_test, y_test)
+    xFOMO = get_xFOMO(fomonet, X_test, y_test, trxps)
 
     pickle.dump(xFOMO, open(f'xFOMO{args.tag}.pkl', 'wb'))
