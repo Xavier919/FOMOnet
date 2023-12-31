@@ -57,7 +57,7 @@ def get_xFOMO(model, X_test, y_test):
     for X,y in zip(X_test,y_test):
         xscores = []
         masked_X = []
-        pad = torch.zeros(4,2000)
+        pad = torch.zeros(4,1000)
         pad_length, X_length = pad.shape[-1], X.shape[-1]
         X = torch.cat([pad,X,pad],dim=1).view(4,-1)
         for i in range(pad_length,pad_length+X_length):
@@ -91,7 +91,7 @@ def get_orfs(preds, seqs_test, trxps):
 if __name__ == "__main__":
 
     split = pickle.load(open(args.split, 'rb'))
-    _, test, trxps = split
+    _, _, test, trxps = split
 
     seqs_test, y_test = test
     

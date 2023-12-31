@@ -17,7 +17,7 @@ import time
 
 
 writer = SummaryWriter()
-test_writer = SummaryWriter()
+valid_writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('split')
@@ -32,12 +32,12 @@ args = parser.parse_args()
 if __name__ == "__main__":
 
     split = pickle.load(open(args.split, 'rb'))
-    train, test, trxps = split
+    train, valid, _, trxps = split
 
     seqs_train, y_train = train
-    seqs_test, y_test = test
+    seqs_valid, y_valid = valid
     
-    X_train, X_test = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_test]
+    X_train, X_valid = [map_seq(x) for x in seqs_train], [map_seq(x) for x in seqs_valid]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         print("Using CPU")
 
     train_set = Transcripts(X_train, y_train)
-    test_set = Transcripts(X_test, y_test)
+    valid_set = Transcripts(X_valid, y_valid)
 
     batch_size = args.batch_size
     epochs = args.epochs
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     train_sampler = BatchSampler(train_set, batch_size)
     train_loader = DataLoader(train_set, batch_sampler=train_sampler, collate_fn=utility_fct, num_workers=8)
 
-    test_sampler = BatchSampler(test_set, batch_size)
-    test_loader = DataLoader(test_set, batch_sampler=test_sampler, collate_fn=utility_fct, num_workers=8)
+    valid_sampler = BatchSampler(valid_set, batch_size)
+    valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, collate_fn=utility_fct, num_workers=8)
 
     fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)
     if torch.cuda.device_count() > 1:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     best_model = 1.0
     early_stop_cnt = 0
-    early_stop = 10
+    early_stop = 5
     for epoch in range(epochs):
         fomonet.train()
         losses = []
@@ -95,20 +95,20 @@ if __name__ == "__main__":
         print(f'{epoch}_{np.mean(losses)}')
 
         fomonet.eval()
-        test_losses = []
-        for X, y in test_loader:
+        valid_losses = []
+        for X, y in valid_loader:
             size = len(X)
             X = X.view(size,4,-1).cuda()
             y = y.view(size,1,-1).cuda()
             outputs = fomonet(X).view(size,1,-1)
-            test_loss = get_loss(X, y, outputs, loss_function)
-            test_loss = test_loss.cpu().detach().numpy()
-            test_writer.add_scalar("Loss/test", test_loss, epoch)
-            test_losses.append(test_loss)
-        print(f'{epoch}_{np.mean(test_losses)}')
+            valid_loss = get_loss(X, y, outputs, loss_function)
+            valid_loss = valid_loss.cpu().detach().numpy()
+            valid_writer.add_scalar("Loss/valid", valid_loss, epoch)
+            valid_losses.append(valid_loss)
+        print(f'{epoch}_{np.mean(valid_losses)}')
 
-        if np.mean(test_losses) < best_model:
-            best_model = np.mean(test_losses)
+        if np.mean(valid_losses) < best_model:
+            best_model = np.mean(valid_losses)
             torch.save(fomonet.state_dict(), f'fomonet{args.tag}.pt')
             early_stop_cnt = 0
         else:
@@ -123,6 +123,6 @@ if __name__ == "__main__":
     print(f"Total training time: {total_time} seconds")
 
     writer.flush()
-    test_writer.flush()
+    valid_writer.flush()
     writer.close()
-    test_writer.close()
+    valid_writer.close()

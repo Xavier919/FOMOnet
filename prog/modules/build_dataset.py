@@ -186,7 +186,7 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                if start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
+                if start_codon not in ['ATG','CTG','GTG','TTG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
                     continue
                 altprots = dict()
                 if trx not in trx_orfs:
@@ -237,7 +237,7 @@ class Data:
                 else:
                     gene_trxps[gene].append((trx, tsl))
         trx_list = []
-        random.seed(5)
+        random.seed(42)
         for gene, trxps in gene_trxps.items():
             sorted_trx = sorted(trxps, key=lambda x: x[1])
             max_tsl = sorted_trx[0][-1]
@@ -262,7 +262,13 @@ class Data:
                 dataset[trx] = {'mapped_seq': seq,
                                 'mapped_cds': seq_tensor.view(1,-1),
                                 'chromosome': chr}
+                random.seed(42)
+                seq_copy = ''.join(random.sample(seq, len(seq))) 
+                dataset[f'{trx}_s'] = {'mapped_seq': seq_copy,
+                                        'mapped_cds': torch.zeros(seq_len).view(1,-1),
+                                        'chromosome': chr}
         return dataset
+
     
     def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
@@ -283,10 +289,13 @@ class Data:
     
     def split_dataset(self, dataset, tag):
         chr_splits = [('1','7','13','19'),('2','8','14','20'),('3','9','15','21'),('4','10','16','22'),('5','11','17','X'), ('6','12','18','Y')]
+        rev_chr_splits = chr_splits[::-1]
         for idx, chr_split in enumerate(chr_splits):
-            X_train = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] not in chr_split]
-            y_train = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] not in chr_split]
+            X_valid = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in rev_chr_splits[idx]]
+            y_valid = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in rev_chr_splits[idx]]
+            X_train = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] not in chr_split and x['chromosome'] not in rev_chr_splits[idx]]
+            y_train = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] not in chr_split and x['chromosome'] not in rev_chr_splits[idx]]
             X_test = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in chr_split]
             y_test = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in chr_split]
-            split = ((X_train,y_train), (X_test,y_test), [x for x,y in dataset.items() if y['chromosome'] in chr_split])
+            split = ((X_train,y_train), (X_valid,y_valid), (X_test,y_test), [x for x,y in dataset.items() if y['chromosome'] in chr_split])
             pickle.dump(split, open(f'data/{tag}{idx+1}.pkl', 'wb'))
