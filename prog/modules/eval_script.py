@@ -39,7 +39,7 @@ def recall_score(target, output):
     return recall.item()
 
 def get_preds(model, X_test):
-    preds = dict()
+    preds = []
     model.eval()
     for X in X_test:
         pad = torch.zeros(4,1000)
