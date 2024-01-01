@@ -1,6 +1,8 @@
 import torch
 import random
 import numpy as np
+from itertools import groupby
+from operator import itemgetter
 
 def pad_seqs(seqs, num_chan, min_pad=100):
     pad_seqs = []
@@ -128,3 +130,26 @@ def build_fasta(data, filename):
     fasta_text = '\n'.join(trx_seqs)
     with open(filename + '.fa', 'w') as fasta_file:
         fasta_file.write(fasta_text)
+
+def xfomo(iou_list, seq, cds_start, cds_stop, min_motif_len=10):
+    median = np.median(iou_list)
+    std = np.std(iou_list)
+    seq_len = len(seq)
+    idx_arr = np.where(iou_list < median-(2*std))[0]
+    grps_idx = [list(map(itemgetter(1), g)) for k, g in groupby(enumerate(idx_arr), lambda x: x[0]-x[1])]
+    results = dict()
+    for grp in grps_idx:
+        low_bnd, high_bnd = grp[0]-3, grp[-1]+3
+        motif = seq[low_bnd:high_bnd+1]
+        if len(motif) < min_motif_len:
+            continue
+        start_dist, stop_dist = low_bnd-cds_start, low_bnd-cds_stop
+        if motif not in results:
+            results[motif] = {'start_dist': [start_dist],
+                              'stop_dist': [stop_dist],
+                              'trx_loc': [low_bnd/seq_len]} 
+        else:
+            results[motif]['start_dist'].append(start_dist)
+            results[motif]['stop_dist'].append(stop_dist)
+            results[motif]['trx_loc'].append(low_bnd/seq_len)
+    return results
