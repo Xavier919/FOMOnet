@@ -157,6 +157,7 @@ class Data:
                     'gene_id':line["Gene stable ID"],
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
+                    'biotype_lev2': line["Transcript type"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
                     'chromosome': line['Chromosome/scaffold name'],
                     'orf_accessions': orf_accessions,
@@ -186,8 +187,8 @@ class Data:
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                if start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
-                    continue
+                #if start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
+                #    continue
                 altprots = dict()
                 if trx not in trx_orfs:
                     altprots[prot_id] = {'MS':int(line["MS score"]),
@@ -224,11 +225,60 @@ class Data:
                 trx_orfs[trx] = altprots
         return trx_orfs
 
-    def get_trx_list(self, ensembl_trx, trx_orfs):
+    def get_exclusion_list(self, trx_orfs, ensembl_trx):
+        exclusion_list = []
+        nmd_cnt = 0
+        over30k_cnt = 0
+        nc_start_cnt = 0
+        nc_stop_cnt = 0
+        many_ensp_cnt = 0
+        not_an_orf_cnt = 0
+        for trx, orfs in tqdm(trx_orfs.items()):
+            biotype = ensembl_trx[trx]['biotype']
+            #exclude if NMD
+            if biotype == 'nmd':
+                nmd_cnt += 1
+                exclusion_list.append(trx)
+            #exclude if multiple ENSP
+            if len([x for x in ensembl_trx['ENST00000361390']['orf_accessions'] if x.startswith('ENSP')]) > 1:
+                many_ensp += 1
+                exclusion_list.append(trx)
+            #exclude if len over 30000 
+            if len(ensembl_trx[trx]['sequence']) > 30000:
+                over30k_cnt += 1
+                exclusion_list.append(trx)
+            #exclude if noncanonical start 
+            for orf, attrs in orfs.items():
+                if attrs['start_codon'] not in ['ATG', 'CTG', 'GTG', 'TTG']:
+                    nc_start_cnt += 1
+                    exclusion_list.append(trx)
+            #exclude if noncanonical stop 
+                if attrs['stop_codon'] not in ['TAA', 'TAG', 'TGA']:
+                    nc_stop_cnt += 1
+                    exclusion_list.append(trx)
+            #exclude if does not respect definition of an ORF
+            orfs_coord = find_orfs(ensembl_trx[trx]['sequence'], long=False, nc=True)
+            for orf, attrs in orfs.items():
+                start, stop = None, None
+                if orf.startswith('ENSP'):
+                    start, stop = attrs['start'], attrs['stop']
+                    if (start,stop) not in orfs_coord:
+                        not_an_orf_cnt = 0
+                        exclusion_list.append(trx)
+        print(f'nmd_cnt:{nmd_cnt}\n')
+        print(f'over30k_cnt:{over30k_cnt}\n')
+        print(f'nc_start_cnt:{nc_start_cnt}\n')
+        print(f'nc_stop_cnt:{nc_stop_cnt}\n')
+        print(f'many_ensp_cnt:{many_ensp_cnt}\n')
+        print(f'not_an_orf_cnt:{not_an_orf_cnt}\n')
+        return set(exclusion_list)
+
+
+    def get_trx_list(self, ensembl_trx, trx_orfs, exclusion_list):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
-            seq_len, tsl, biotype = len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['tsl'].split(' ')[0], ensembl_trx[trx]['biotype']
-            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or seq_len > 30000 or biotype == 'nmd':
+            tsl = ensembl_trx[trx]['tsl'].split(' ')[0]
+            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or trx in exclusion_list:
                 continue
             for attrs in orfs.values():
                 gene = attrs["gene_name"]
@@ -265,12 +315,12 @@ class Data:
         return dataset
 
     
-    def alt_dataset(self, ensembl_trx, trx_orfs, biotypes):
+    def alt_dataset(self, ensembl_trx, trx_orfs, biotypes, exclusion_list):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
         dataset = dict()
         for trx, orfs in tqdm(trx_orfs.items()):
             seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            if biotype not in biotypes or seq_len > 30000 or trx in trx_list:
+            if biotype not in biotypes or trx in trx_list or trx in exclusion_list:
                 continue
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in orfs.items():

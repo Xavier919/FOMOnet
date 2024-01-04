@@ -34,7 +34,6 @@ def get_loss(X, y, out, loss_fct):
     loss_sums = torch.sum(loss, dim=(1,-1))
     return (loss_sums/lens).mean()
 
-
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
@@ -108,23 +107,24 @@ def orf_retrieval(seq, out, t = 0.5, w_size = 7, cds_cov = 0.75):
             starts = [i for i in range(stop-3,-1,-3) if seq[i:i+3] in start_codons]
             if len(starts) == 0 or not check_drop(w, t, e):
                 continue
-            best_codon, best_codon_idx = None, None
+            best_codon, best_codon_idx, best_cds_cov = None, None, 0
             for start in starts:
                 e, w = get_window(out, start, w_size)
                 if valid_start(start, stops, idx) or not check_drop(w[::-1], t, e) or stop - start < 90:
                     continue
-                if np.sum(out[start:stop] >= t)/(stop-start) < cds_cov:
-                    continue
-                if best_codon == None or best_codon_idx < start:
-                    best_codon, best_codon_idx = seq[start:start+3], start
-            if best_codon != None:
+                cov = np.sum(out[start:stop] >= t)/(stop-start)
+                if best_codon == None or cov > best_cds_cov:
+                    best_codon, best_codon_idx, best_cds_cov = seq[start:start+3], start, cov
+            if best_codon != None and best_cds_cov >= cds_cov:
                 cds.append((best_codon_idx, stop+3))
     return cds
 
 def build_fasta(data, filename):
     trx_seqs = []
+    count = 0
     for trx, seq in data:
-        header = f'>{trx}'
+        count += 1
+        header = f'>{count}'
         trx_seq = header + '\n' + seq.upper()
         trx_seqs.append(trx_seq)
     fasta_text = '\n'.join(trx_seqs)
