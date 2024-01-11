@@ -225,61 +225,43 @@ class Data:
                 trx_orfs[trx] = altprots
         return trx_orfs
 
-    def get_exclusion_list(self, trx_orfs, ensembl_trx):
-        exclusion_list = []
-        nmd_cnt = 0
-        over30k_cnt = 0
-        nc_start_cnt = 0
-        nc_stop_cnt = 0
-        many_ensp_cnt = 0
-        not_an_orf_cnt = 0
+    def get_candidate_list(self, trx_orfs, ensembl_trx):
+        candidate_list = []
         for trx, orfs in tqdm(trx_orfs.items()):
             biotype = ensembl_trx[trx]['biotype']
-            #exclude if NMD
-            if biotype == 'nmd':
-                nmd_cnt += 1
-                exclusion_list.append(trx)
+            #exclude if not protein coding
+            if biotype != 'protein_coding':
+                continue
             #exclude if multiple ENSP
-            if len([x for x in ensembl_trx['ENST00000361390']['orf_accessions'] if x.startswith('ENSP')]) > 1:
-                many_ensp += 1
-                exclusion_list.append(trx)
+            if len([x for x in ensembl_trx[trx]['orf_accessions'] if x.startswith('ENSP')]) > 1:
+                continue
             #exclude if len over 30000 
             if len(ensembl_trx[trx]['sequence']) > 30000:
-                over30k_cnt += 1
-                exclusion_list.append(trx)
+                continue
             #exclude if noncanonical start 
+            skip = False
             for orf, attrs in orfs.items():
-                if attrs['start_codon'] not in ['ATG', 'CTG', 'GTG', 'TTG']:
-                    nc_start_cnt += 1
-                    exclusion_list.append(trx)
+                if orf.startswith('ENSP') and attrs['start_codon'] not in ['ATG', 'CTG', 'GTG', 'TTG']:
+                    skip = True
             #exclude if noncanonical stop 
-                if attrs['stop_codon'] not in ['TAA', 'TAG', 'TGA']:
-                    nc_stop_cnt += 1
-                    exclusion_list.append(trx)
-            #exclude if does not respect definition of an ORF
-            orfs_coord = find_orfs(ensembl_trx[trx]['sequence'], long=False, nc=True)
-            for orf, attrs in orfs.items():
-                start, stop = None, None
-                if orf.startswith('ENSP'):
-                    start, stop = attrs['start'], attrs['stop']
-                    if (start,stop) not in orfs_coord:
-                        not_an_orf_cnt = 0
-                        exclusion_list.append(trx)
-        print(f'nmd_cnt:{nmd_cnt}\n')
-        print(f'over30k_cnt:{over30k_cnt}\n')
-        print(f'nc_start_cnt:{nc_start_cnt}\n')
-        print(f'nc_stop_cnt:{nc_stop_cnt}\n')
-        print(f'many_ensp_cnt:{many_ensp_cnt}\n')
-        print(f'not_an_orf_cnt:{not_an_orf_cnt}\n')
-        return set(exclusion_list)
+                elif orf.startswith('ENSP') and attrs['stop_codon'] not in ['TAA', 'TAG', 'TGA']:
+                    skip = True
+            if skip:
+                continue
+            #exclude if no ENSP and protein coding
+            if biotype == 'protein_coding' and not any(x.startswith('ENSP') for x in orfs.keys()):
+                continue
+
+            candidate_list.append(trx)
+        return set(candidate_list)
 
 
-    def get_trx_list(self, ensembl_trx, trx_orfs, exclusion_list):
+    def get_trx_list(self, ensembl_trx, trx_orfs, candidate_list):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
-            tsl = ensembl_trx[trx]['tsl'].split(' ')[0]
-            if not any([x.startswith("ENSP") for x,y in trx_orfs[trx].items()]) or trx in exclusion_list:
+            if trx not in candidate_list:
                 continue
+            tsl = ensembl_trx[trx]['tsl'].split(' ')[0]
             for attrs in orfs.values():
                 gene = attrs["gene_name"]
                 if gene not in gene_trxps:
@@ -296,42 +278,32 @@ class Data:
             trx_list.append(rnd_trx)
         return trx_list
     
-    def dataset(self, ensembl_trx, trx_orfs):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
+    def dataset(self, ensembl_trx, trx_orfs, candidate_list):
+        trx_list = self.get_trx_list(ensembl_trx, trx_orfs, candidate_list)
         dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
+        for trx in tqdm(trx_list):
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
-            if trx not in trx_list:
-                continue
             seq_tensor = torch.zeros(seq_len)
-            for orf, attrs in orfs.items():
+            for orf, attrs in trx_orfs[trx].items():
                 start, stop = attrs['start'], attrs['stop']
                 if orf.startswith('ENSP'):
                     seq_tensor[start:stop] = 1
-            if 1 in seq_tensor:
-                dataset[trx] = {'mapped_seq': seq,
-                                'mapped_cds': seq_tensor.view(1,-1),
-                                'chromosome': chr}
-        return dataset
 
-    
-    def alt_dataset(self, ensembl_trx, trx_orfs, biotypes, exclusion_list):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs)
-        dataset = dict()
-        for trx, orfs in tqdm(trx_orfs.items()):
-            seq, seq_len, chr, biotype = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome'], ensembl_trx[trx]['biotype']
-            if biotype not in biotypes or trx in trx_list or trx in exclusion_list:
-                continue
-            seq_tensor = torch.zeros(seq_len)
-            for orf, attrs in orfs.items():
-                start, stop = attrs['start'], attrs['stop']
-                if attrs['MS'] >= 2 or attrs['TE'] >= 2:
-                    seq_tensor[start:stop] = 1
             dataset[trx] = {'mapped_seq': seq,
                             'mapped_cds': seq_tensor.view(1,-1),
                             'chromosome': chr}
         return dataset
-    
+
+    def alt_dataset(self, ensembl_trx):
+        dataset = dict()
+        for trx, attrs in tqdm(ensembl_trx.items()):
+            seq, seq_len, chr = attrs['sequence'], len(attrs['sequence']), attrs['chromosome']
+            seq_tensor = torch.zeros(seq_len)
+            dataset[trx] = {'mapped_seq': seq,
+                            'mapped_cds': seq_tensor.view(1,-1),
+                            'chromosome': chr}
+        return dataset
+
     def split_dataset(self, dataset, tag):
         chr_splits = [('1','7','13','19'),('2','8','14','20'),('3','9','15','21'),('4','10','16','22'),('5','11','17','X'), ('6','12','18','Y')]
         rev_chr_splits = chr_splits[::-1]

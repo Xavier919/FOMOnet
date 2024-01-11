@@ -121,10 +121,8 @@ def orf_retrieval(seq, out, t = 0.5, w_size = 7, cds_cov = 0.75):
 
 def build_fasta(data, filename):
     trx_seqs = []
-    count = 0
     for trx, seq in data:
-        count += 1
-        header = f'>{count}'
+        header = f'>{trx}'
         trx_seq = header + '\n' + seq.upper()
         trx_seqs.append(trx_seq)
     fasta_text = '\n'.join(trx_seqs)
