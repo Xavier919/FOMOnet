@@ -3,10 +3,8 @@ import pyfaidx
 import pickle
 import numpy as np
 import torch
-from tqdm import tqdm_notebook as tqdm
 import torch
 import random
-from tqdm.notebook import tqdm
 import random
 import pandas as pd
 from modules.utils import *
@@ -227,7 +225,7 @@ class Data:
 
     def get_candidate_list(self, trx_orfs, ensembl_trx):
         candidate_list = []
-        for trx, orfs in tqdm(trx_orfs.items()):
+        for trx, orfs in trx_orfs.items():
             biotype = ensembl_trx[trx]['biotype']
             #exclude if not protein coding
             if biotype != 'protein_coding':
@@ -281,7 +279,7 @@ class Data:
     def dataset(self, ensembl_trx, trx_orfs, candidate_list):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs, candidate_list)
         dataset = dict()
-        for trx in tqdm(trx_list):
+        for trx in trx_list:
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
             seq_tensor = torch.zeros(seq_len)
             for orf, attrs in trx_orfs[trx].items():
@@ -296,7 +294,7 @@ class Data:
 
     def alt_dataset(self, ensembl_trx):
         dataset = dict()
-        for trx, attrs in tqdm(ensembl_trx.items()):
+        for trx, attrs in ensembl_trx.items():
             seq, seq_len, chr = attrs['sequence'], len(attrs['sequence']), attrs['chromosome']
             seq_tensor = torch.zeros(seq_len)
             dataset[trx] = {'mapped_seq': seq,
