@@ -315,4 +315,4 @@ class Data:
             X_test = [x['mapped_seq'] for x in dataset.values() if x['chromosome'] in chr_split]
             y_test = [x['mapped_cds'] for x in dataset.values() if x['chromosome'] in chr_split]
             split = ((X_train,y_train), (X_valid,y_valid), (X_test,y_test), [x for x,y in dataset.items() if y['chromosome'] in chr_split])
-            pickle.dump(split, open(f'data/{tag}{idx+1}.pkl', 'wb'))
+            pickle.dump(split, open(f'{tag}{idx+1}.pkl', 'wb'))
