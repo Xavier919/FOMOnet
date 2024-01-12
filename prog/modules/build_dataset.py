@@ -219,7 +219,7 @@ class Data:
                 trx_orfs[trx] = altprots
         return trx_orfs
 
-    def get_candidate_list(self, trx_orfs, ensembl_trx):
+    def get_candidate_list(trx_orfs, ensembl_trx):
         candidate_list = []
         for trx, orfs in trx_orfs.items():
             biotype = ensembl_trx[trx]['biotype']
@@ -250,7 +250,7 @@ class Data:
         return set(candidate_list)
 
 
-    def get_trx_list(self, ensembl_trx, trx_orfs, candidate_list):
+    def get_trx_list(ensembl_trx, trx_orfs, candidate_list):
         gene_trxps = dict()
         for trx, orfs in trx_orfs.items():
             if trx not in candidate_list:
@@ -272,7 +272,7 @@ class Data:
             trx_list.append(rnd_trx)
         return trx_list
     
-    def dataset(self, ensembl_trx, trx_orfs, candidate_list):
+    def dataset(ensembl_trx, trx_orfs, candidate_list):
         trx_list = self.get_trx_list(ensembl_trx, trx_orfs, candidate_list)
         dataset = dict()
         for trx in trx_list:

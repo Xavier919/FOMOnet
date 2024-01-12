@@ -1,8 +1,13 @@
 #imports
 from torch import cat
 import torch
+from matplotlib import pyplot as plt
+from torch import cat
+from sklearn import metrics
+from torchmetrics import PrecisionRecallCurve
+from sklearn.metrics import auc
 #project specific imports
-from ..modules.utils import orf_retrieval, pad_seqs
+from modules.utils import orf_retrieval, pad_seqs
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()
@@ -73,3 +78,48 @@ def get_orfs(preds, seqs_test, trxps):
         seq_test = seqs_test[idx]
         orfs[trx] = orf_retrieval(seq_test, out.numpy(), t = 0.5, w_size = 10, cds_cov = 0.75)
     return orfs
+
+
+def ROC_curve(list_preds, list_targets):
+    #mean curve
+    cat_preds = cat([x.flatten() for y in list_preds for x in y]).detach().numpy()
+    cat_targets = cat([x.flatten() for y in list_targets for x in y]).long().detach().numpy()
+    fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
+    auc_roc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, color = 'black', linewidth=1)
+    #individual curves
+    for preds, targets in zip(list_preds, list_targets):
+        cat_preds = cat([x.flatten() for x in preds]).detach().numpy()
+        cat_targets = cat([x.flatten() for x in targets]).long().detach().numpy()
+        fpr, tpr, _ = metrics.roc_curve(cat_targets, cat_preds)
+        plt.plot(fpr, tpr, color = 'green', linewidth=0.5)
+    
+    plt.ylim(0.95, 1.01), plt.xlim(0, 1)
+    plt.xlabel("False positive rate"), plt.ylabel("True positive rate"), plt.title('ROC curve')
+    plt.legend(['ROC auc: {}'.format(round(auc_roc, 3))])
+    plt.savefig('roc_curve.png')
+    plt.show()
+    plt.clf()
+
+
+def PR_curve(list_preds, list_targets):
+    pr_curve = PrecisionRecallCurve(task='binary')
+    #mean curve
+    cat_preds = cat([x.flatten() for y in list_preds for x in y])
+    cat_targets = cat([x.flatten() for y in list_targets for x in y]).long()
+    precision, recall, _ = pr_curve(cat_preds, cat_targets)
+    auc_pr = auc(recall, precision)
+    plt.plot(recall, precision, color = 'black', linewidth=1)
+    #individual curves
+    for preds, targets in zip(list_preds, list_targets):
+        cat_preds = cat([x.flatten() for x in preds])
+        cat_targets = cat([x.flatten() for x in targets]).long()
+        precision, recall, _ = pr_curve(cat_preds, cat_targets)
+        plt.plot(recall, precision, color = 'green', linewidth=0.5)
+    
+    plt.ylim(0.95, 1.01), plt.xlim(0, 1)
+    plt.xlabel("Recall"), plt.ylabel("Precision"), plt.title('PR curve')
+    plt.legend(['PR auc: {}'.format(round(auc_pr, 3))])
+    plt.savefig('pr_curve.png')
+    plt.show()
+    plt.clf()
