@@ -1,5 +1,6 @@
-from ..modules.evaluate import get_preds, get_orfs
-from ..modules.model import FOMOnet
+from modules.evaluate import get_preds, get_orfs
+from modules.model import FOMOnet
+from modules.utils import map_seq
 import pickle
 import argparse
 import torch
