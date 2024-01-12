@@ -1,7 +1,8 @@
-from FOMOnet.prog.modules.evaluate import *
 import pickle
 import argparse
-from model import FOMOnet
+from ..modules.model import FOMOnet
+from ..modules.utils import map_seq
+from ..modules.evaluate import get_xFOMO
 import torch
 import torch.nn as nn
 

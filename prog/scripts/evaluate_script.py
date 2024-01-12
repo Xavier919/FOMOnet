@@ -1,7 +1,7 @@
-from FOMOnet.prog.modules.evaluate import *
+from ..modules.evaluate import get_preds, get_orfs
+from ..modules.model import FOMOnet
 import pickle
 import argparse
-from model import FOMOnet
 import torch
 import torch.nn as nn
 
