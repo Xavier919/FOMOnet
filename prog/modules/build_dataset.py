@@ -288,7 +288,7 @@ class Data:
                             'chromosome': chr}
         return dataset
 
-    def alt_dataset(self, ensembl_trx):
+    def alt_dataset(ensembl_trx):
         dataset = dict()
         for trx, attrs in ensembl_trx.items():
             seq, seq_len, chr = attrs['sequence'], len(attrs['sequence']), attrs['chromosome']
@@ -298,7 +298,7 @@ class Data:
                             'chromosome': chr}
         return dataset
 
-    def split_dataset(self, dataset, tag):
+    def split_dataset(dataset, tag):
         chr_splits = [('1','7','13','19'),('2','8','14','20'),('3','9','15','21'),('4','10','16','22'),('5','11','17','X'), ('6','12','18','Y')]
         rev_chr_splits = chr_splits[::-1]
         for idx, chr_split in enumerate(chr_splits):
