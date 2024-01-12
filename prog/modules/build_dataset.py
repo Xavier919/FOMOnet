@@ -6,7 +6,6 @@ import torch
 import torch
 import random
 import random
-import pandas as pd
 from modules.utils import *
 
 class Data:
@@ -139,7 +138,7 @@ class Data:
         ensembl_trx = dict()
         with open(self.Ens_trx, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
-            for n, row in tqdm(enumerate(reader)):
+            for n, row in enumerate(reader):
                 if n==0:
                     cols = row
                     continue
