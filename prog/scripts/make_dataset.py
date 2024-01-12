@@ -1,5 +1,5 @@
 import argparse
-from ..modules.build_dataset import *
+from modules.build_dataset import *
 import pickle
 
 parser = argparse.ArgumentParser()
