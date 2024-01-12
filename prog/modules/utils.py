@@ -19,11 +19,6 @@ def utility_fct(Xy):
     X, y = pad_seqs(seq1, 4), pad_seqs(seq2, 1)
     return (X, y)
 
-def find_cds_coordinates(trx, cds):
-    start = trx.find(cds)
-    stop = start + len(cds)
-    return start, stop
-
 def get_loss(X, y, out, loss_fct):
     loss = loss_fct(out, y).cuda()
     zero_mask = torch.all(X == 0, dim=1)
@@ -37,19 +32,6 @@ def get_loss(X, y, out, loss_fct):
 def map_seq(seq):
     mapping = {'N':[0.,0.,0.,0.], 'A':[1.,0.,0.,0.], 'T':[0.,1.,0.,0.], 'G':[0.,0.,1.,0.], 'C':[0.,0.,0.,1.]}
     return torch.tensor([mapping[x] for x in seq]).T
-
-def n_mask(input_string, seed=42, pct=15):
-    random.seed(seed)
-    n_count = int(len(input_string) * pct / 100)
-    n_indices = random.sample(range(len(input_string)), n_count)
-    return ''.join(['N' if i in n_indices else char for i, char in enumerate(input_string)])
-
-def find_frame(start, stop):
-    valid = False
-    for i in range(3):
-        if (start - i) % 3 == 0 and (stop - i) % 3 == 0:
-            valid = True
-    return valid
 
 def find_orfs(seq, long=True, nc=False):
     start_codons, stop_codons = ['ATG'], ['TGA', 'TAA', 'TAG']

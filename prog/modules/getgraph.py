@@ -1,16 +1,10 @@
 #imports
-import torch
 import pickle
-from sklearn.model_selection import train_test_split
-import numpy as np
 from matplotlib import pyplot as plt
 from torch import cat
 from sklearn import metrics
 from torchmetrics import PrecisionRecallCurve
 from sklearn.metrics import auc
-from sklearn.metrics import recall_score
-import torch
-import torch.nn as nn
 import argparse
 
 parser = argparse.ArgumentParser()

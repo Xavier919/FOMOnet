@@ -1,12 +1,9 @@
 import csv
 import pyfaidx
 import pickle
-import numpy as np
-import torch
 import torch
 import random
-import random
-from modules.utils import *
+from .utils import *
 
 class Data:
     def __init__(self, OP_tsv, Ens_trx, trx_fasta):

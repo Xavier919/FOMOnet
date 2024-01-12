@@ -1,10 +1,8 @@
 #imports
-import torch
 from torch import cat
 import torch
 #project specific imports
-from model import FOMOnet
-from utils import *
+from ..modules.utils import orf_retrieval, pad_seqs
 
 def bin_pred(output, thresh):
     bin_pred = (output>thresh).int()

@@ -8,10 +8,10 @@ from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import torch.nn as nn
 #project specific imports
-from model import FOMOnet
-from batch_sampler import BatchSampler
-from transcripts import Transcripts
-from utils import *
+from ..modules.model import FOMOnet
+from ..modules.batch_sampler import BatchSampler
+from ..modules.transcripts import Transcripts
+from ..modules.utils import get_loss, map_seq, utility_fct
 import argparse
 import time
 
