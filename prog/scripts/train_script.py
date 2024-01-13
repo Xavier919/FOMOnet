@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     best_model = 1.0
     early_stop_cnt = 0
-    early_stop = 5
+    early_stop = 10
     for epoch in range(epochs):
         fomonet.train()
         losses = []
