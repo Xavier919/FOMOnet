@@ -24,7 +24,7 @@ parser.add_argument('split')
 parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
-parser.add_argument('l2', type=int)
+parser.add_argument('l2', type=float)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
