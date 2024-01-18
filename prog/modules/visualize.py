@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from ..modules.utils import *
+from modules.utils import *
 
 def map_pred(X, y):
     preds = X.view(-1).detach().numpy()

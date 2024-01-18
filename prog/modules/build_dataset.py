@@ -80,6 +80,8 @@ class Data:
             'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
             'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W',
             }
+        
+        self.chromosomes = {'1','7','13','19','2','8','14','20','3','9','15','21','4','10','16','22','5','11','17','X', '6','12','18','Y'}
 
         self.OP_tsv = OP_tsv
         self.Ens_trx = Ens_trx
@@ -140,20 +142,22 @@ class Data:
                     cols = row
                     continue
                 line = dict(zip(cols, row))
+                chromosome = line['Chromosome/scaffold name']
+                if chromosome not in self.chromosomes:
+                    continue
                 trx = line['Transcript stable ID']
                 sequence = str(self.ensembl95_trxps["|".join([line['Gene stable ID'], line['Transcript stable ID']])])
                 orf_accessions = []
                 if trx in op_trx:
                     if trx in self.OP_trx_altprot:
                         orf_accessions = self.OP_trx_altprot[trx]
-
                 ensembl_trx[trx] = {
                     'gene_id':line["Gene stable ID"],
                     'tsl': line["Transcript support level (TSL)"],
                     'gene_name': line["Gene name"],
                     'biotype_lev2': line["Transcript type"],
                     'biotype': self.biotype_grouping[line["Transcript type"]],
-                    'chromosome': line['Chromosome/scaffold name'],
+                    'chromosome': chromosome,
                     'orf_accessions': orf_accessions,
                     'sequence': sequence
                 }
@@ -175,14 +179,14 @@ class Data:
                 if not any(x in line["protein accession numbers"] for x in ["IP_", "ENSP", "II_"]):
                     continue
                 trx = line["transcript accession"].split(".")[0]
+                if trx not in ensembl_trx:
+                    continue
                 prot_id = line["protein accession numbers"].split(".")[0]
                 seq = ensembl_trx[trx]['sequence']
                 start, stop = int(line['start transcript coordinates'])-1, int(line['stop transcript coordinates'])-1
                 start_codon, stop_codon = seq[start:start+3], seq[stop-3:stop]
                 frame = int(line['frame'])
                 chromosome = line['chr']
-                #if start_codon not in ['ATG'] or stop_codon not in ['TAA', 'TAG', 'TGA'] or frame == 0:
-                #    continue
                 altprots = dict()
                 if trx not in trx_orfs:
                     altprots[prot_id] = {'MS':int(line["MS score"]),
@@ -217,6 +221,39 @@ class Data:
             if trx not in trx_orfs:
                 altprots = dict()
                 trx_orfs[trx] = altprots
+
+        for trx, orfs_ in trx_orfs.items():
+            can_start = None
+            can_stop = None
+            ###TODO BIOTYPE NOT WORKING
+            biotype = ensembl_trx[trx]['biotype']
+            if any(x.startswith('ENSP') for x in orfs_.keys()) and biotype == 'protein_coding':
+                for orf, attrs in orfs_.items():
+                    if orf.startswith('ENSP'):
+                        can_start = attrs['start']
+                        can_stop = attrs['stop']
+                for orf, attrs in orfs_.items():
+                    start, stop = attrs['start'], attrs['stop']
+                    if stop <= can_start:
+                        attrs['loc'] = 'uorf'
+                    elif start < can_start and stop in range(can_start, can_stop):
+                        attrs['loc'] = 'uoorf'
+                    elif all(x in range(can_start,can_stop) for x in [start,stop]):
+                        attrs['loc'] = 'ioorf'
+                    elif not any(x in range(can_start, can_stop) for x in [start,stop]) and (stop-start) > (can_stop-can_start):
+                        attrs['loc'] = 'oorf'
+                    elif start in range(can_start, can_stop) and stop > can_stop:
+                        attrs['loc'] = 'doorf'
+                    elif start >= can_stop:
+                        attrs['loc'] = 'dorf'
+                    elif start == can_start and stop == can_stop:
+                        attrs['loc'] = 'annotated'
+                    else:
+                        attrs['loc'] = None
+            else:
+                for orf, attrs in orfs_.items():
+                    attrs['loc'] = attrs['biotype']
+
         return trx_orfs
 
     def get_candidate_list(trx_orfs, ensembl_trx):
@@ -273,7 +310,7 @@ class Data:
         return trx_list
     
     def dataset(ensembl_trx, trx_orfs, candidate_list):
-        trx_list = self.get_trx_list(ensembl_trx, trx_orfs, candidate_list)
+        trx_list = get_trx_list(ensembl_trx, trx_orfs, candidate_list)
         dataset = dict()
         for trx in trx_list:
             seq, seq_len, chr = ensembl_trx[trx]['sequence'], len(ensembl_trx[trx]['sequence']), ensembl_trx[trx]['chromosome']
