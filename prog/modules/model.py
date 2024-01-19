@@ -36,9 +36,12 @@ class FOMOnet(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def crop(self, x, enc_ftrs):
-        chs, dims = x.shape[1:]
-        enc_ftrs = torchvision.transforms.CenterCrop([chs, dims])(enc_ftrs)
-        return enc_ftrs
+        if enc_ftrs[-1] > x.shape[-1]:
+            chs, dims = x.shape[1:]
+            enc_ftrs = torchvision.transforms.CenterCrop([chs, dims])(enc_ftrs)
+            return enc_ftrs
+        else:
+            return enc_ftrs
 
     def forward(self, x):
         init_shape = x.shape[2]
