@@ -123,8 +123,8 @@ class FOMOnet(nn.Module):
 
         #decoder layer f (final layer)
         x = self.dconvf(x)
-        #x = F.interpolate(x, init_shape)
         print(x.shape[-1])
+        x = F.interpolate(x, init_shape)
         return self.sigmoid(x)
 
     @staticmethod
