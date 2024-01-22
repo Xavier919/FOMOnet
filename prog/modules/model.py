@@ -42,6 +42,7 @@ class FOMOnet(nn.Module):
 
     def forward(self, x):
         init_shape = x.shape[2]
+        print(init_shape)
         #encoder layer 1
         block1 = self.conv1(x)
         e1_shape = x.shape
@@ -122,7 +123,8 @@ class FOMOnet(nn.Module):
 
         #decoder layer f (final layer)
         x = self.dconvf(x)
-        x = F.interpolate(x, init_shape)
+        #x = F.interpolate(x, init_shape)
+        print(x.shape[-1])
         return self.sigmoid(x)
 
     @staticmethod
