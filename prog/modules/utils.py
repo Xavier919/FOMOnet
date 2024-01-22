@@ -8,7 +8,7 @@ def pad_seqs(seqs, num_chan, min_pad=100):
     pad_seqs = []
     max_len = max([x.shape[1] for x in seqs])+min_pad
     #here, 5 is the number of maxpooling layers
-    max_len = [i for i in range(0,30000) if i % (2^5) == 0 and i >= max_len][0]
+    max_len = [i for i in range(0,30500) if i % (2^5) == 0 and i >= max_len][0]
     for seq in seqs:
         diff_len = max_len - seq.shape[1]
         padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)
