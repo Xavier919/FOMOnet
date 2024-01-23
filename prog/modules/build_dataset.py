@@ -225,7 +225,6 @@ class Data:
         for trx, orfs_ in trx_orfs.items():
             can_start = None
             can_stop = None
-            ###TODO BIOTYPE NOT WORKING
             biotype = ensembl_trx[trx]['biotype']
             if any(x.startswith('ENSP') for x in orfs_.keys()) and biotype == 'protein_coding':
                 for orf, attrs in orfs_.items():
