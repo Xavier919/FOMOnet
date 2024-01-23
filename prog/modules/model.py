@@ -42,34 +42,28 @@ class FOMOnet(nn.Module):
 
     def forward(self, x):
         init_shape = x.shape[2]
-        print(init_shape)
         #encoder layer 1
         block1 = self.conv1(x)
-        e1_shape = x.shape
         x = self.maxpool(block1)
         x = self.dropout(x)
         
         #encoder layer 2
         block2 = self.conv2(x) 
-        e2_shape = x.shape
         x = self.maxpool(block2)
         x = self.dropout(x)
 
         #encoder layer 3
         block3 = self.conv3(x) 
-        e3_shape = x.shape
         x = self.maxpool(block3)
         x = self.dropout(x)
 
         #encoder layer 4
         block4 = self.conv4(x) 
-        e4_shape = x.shape
         x = self.maxpool(block4)
         x = self.dropout(x)
 
         #encoder layer 5
         block5 = self.conv5(x) 
-        e5_shape = x.shape
         x = self.maxpool(block5)
         x = self.dropout(x)
 
@@ -123,7 +117,6 @@ class FOMOnet(nn.Module):
 
         #decoder layer f (final layer)
         x = self.dconvf(x)
-        print(x.shape[-1])
         x = F.interpolate(x, init_shape)
         return self.sigmoid(x)
 
