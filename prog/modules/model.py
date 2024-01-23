@@ -79,6 +79,7 @@ class FOMOnet(nn.Module):
 
         #decoder layer 5
         upsamp5 = self.upsample5(x)
+        upsamp5 = F.interpolate(upsamp5, block5.shape[2])
         cropped5 = self.crop(upsamp5, block5)
         cat5 = torch.cat((upsamp5, cropped5), 1)
         x = self.dconv5(cat5)
@@ -86,6 +87,7 @@ class FOMOnet(nn.Module):
 
         #decoder layer 4
         upsamp4 = self.upsample4(x)
+        upsamp4 = F.interpolate(upsamp4, block4.shape[2])
         cropped4 = self.crop(upsamp4, block4)
         cat4 = torch.cat((upsamp4, cropped4), 1)
         x = self.dconv4(cat4)
@@ -93,6 +95,7 @@ class FOMOnet(nn.Module):
         
         #decoder layer 3
         upsamp3 = self.upsample3(x)
+        upsamp3 = F.interpolate(upsamp3, block3.shape[2])
         cropped3 = self.crop(upsamp3, block3)
         cat3 = torch.cat((upsamp3, cropped3), 1)
         x = self.dconv3(cat3)
@@ -100,6 +103,7 @@ class FOMOnet(nn.Module):
 
         #decoder layer 2
         upsamp2 = self.upsample2(x)
+        upsamp2 = F.interpolate(upsamp2, block2.shape[2])
         cropped2 = self.crop(upsamp2, block2)
         cat2 = torch.cat((upsamp2, cropped2), 1)
         x = self.dconv2(cat2)
@@ -107,6 +111,7 @@ class FOMOnet(nn.Module):
 
         #decoder layer 1
         upsamp1 = self.upsample1(x)
+        upsamp1 = F.interpolate(upsamp1, block1.shape[2])
         cropped1 = self.crop(upsamp1, block1)
         cat1 = torch.cat((upsamp1, cropped1), 1)
         x = self.dconv1(cat1)
