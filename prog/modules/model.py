@@ -69,10 +69,12 @@ class FOMOnet(nn.Module):
 
         #encoder layer 6
         block6 = self.conv6(x) 
+        x = block6
         #x = self.dropout(block6)
 
         #encoder bottleneck layer
         block7 = self.convb(x) 
+        x = block7
         #x = self.dropout(block7)
 
         #decoder layer 5
