@@ -4,18 +4,10 @@ import numpy as np
 from itertools import groupby
 from operator import itemgetter
 
-def check_div(num, iterations):
-    for i in range(1, iterations + 1):
-        num //= 2
-        if num % 2 != 0:
-            return False
-    return True
 
 def pad_seqs(seqs, num_chan, min_pad=100):
     pad_seqs = []
     max_len = max([x.shape[1] for x in seqs])+min_pad
-    #here 5 is num of maxpool layers
-    #max_len = [i for i in range(30050) if check_div(i, 5) and max_len <= i][0]
     for seq in seqs:
         diff_len = max_len - seq.shape[1]
         padL, padR = torch.zeros(num_chan, diff_len//2), torch.zeros(num_chan, diff_len//2+diff_len%2)

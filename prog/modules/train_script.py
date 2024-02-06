@@ -8,10 +8,10 @@ from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import torch.nn as nn
 #project specific imports
-from ..modules.model import FOMOnet
-from ..modules.batch_sampler import BatchSampler
-from ..modules.transcripts import Transcripts
-from ..modules.utils import get_loss, map_seq, utility_fct
+from modules.model import FOMOnet
+from modules.batch_sampler import BatchSampler
+from modules.transcripts import Transcripts
+from modules.utils import get_loss, map_seq, utility_fct
 import argparse
 import time
 
@@ -24,8 +24,7 @@ parser.add_argument('split')
 parser.add_argument('batch_size', type=int)
 parser.add_argument('epochs', type=int)
 parser.add_argument('lr', type=float)
-parser.add_argument('kernel', type=int)
-parser.add_argument('dropout', type=float)
+parser.add_argument('l2', type=float)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
@@ -58,25 +57,24 @@ if __name__ == "__main__":
     valid_sampler = BatchSampler(valid_set, batch_size)
     valid_loader = DataLoader(valid_set, batch_sampler=valid_sampler, collate_fn=utility_fct, num_workers=8)
 
-    fomonet = FOMOnet(k=args.kernel, p=args.dropout).to(device)
+    fomonet = FOMOnet().to(device)
     if torch.cuda.device_count() > 1:
         print("Using", torch.cuda.device_count(), "GPUs")
         fomonet = nn.DataParallel(fomonet) 
         
-    optimizer = optim.Adam(fomonet.parameters(), args.lr)
+    optimizer = optim.Adam(fomonet.parameters(), lr = args.lr, weight_decay=args.l2)
     loss_function = nn.BCELoss(reduction='none').to(device) 
 
     print(f'tag:{args.tag}\n')
     print(f'learning rate:{args.lr}\n')
     print(f'batch size:{args.batch_size}\n')
-    print(f'kernel:{args.kernel}\n')
-    print(f'dropout:{args.dropout}\n')
+    print(f'l2:{args.l2}\n')
 
     start_time = time.time()
 
     best_model = 1.0
     early_stop_cnt = 0
-    early_stop = 5
+    early_stop = 10
     for epoch in range(epochs):
         fomonet.train()
         losses = []
