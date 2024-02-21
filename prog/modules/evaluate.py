@@ -40,11 +40,11 @@ def get_preds(model, X_test):
         preds.append(out)
     return preds
 
-def get_xFOMO(model, X_test, y_test, trxps):
+def get_xFOMO(model, X_test, y_test, trxps, batch_size, w_size):
     model.eval()
     trx_xscores = dict()
-    w_size = 7
-    batch_size = 8
+    w_size = w_size
+    batch_size = batch_size
     for X,y,trx in zip(X_test,y_test,trxps):
         xscores = []
         masked_X = []

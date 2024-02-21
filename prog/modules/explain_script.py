@@ -4,8 +4,6 @@ from modules.model import FOMOnet
 from modules.utils import map_seq
 from modules.evaluate import get_xFOMO
 from modules.utils import *
-from modules.batch_sampler import BatchSampler
-from modules.transcripts import Transcripts
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -15,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('split')
 parser.add_argument('model')
 parser.add_argument('batch_size', type=int)
+parser.add_argument('w_size', type=int)
 parser.add_argument('tag', type=str)
 args = parser.parse_args()
 
