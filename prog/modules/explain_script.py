@@ -38,6 +38,6 @@ if __name__ == "__main__":
     fomonet.load_state_dict(state_dict)
 
 
-    xFOMO = get_xFOMO(fomonet, X_test, y_test, trxps)
+    xFOMO = get_xFOMO(fomonet, X_test, y_test, trxps, args.batch_size, args.w_size)
 
     pickle.dump(xFOMO, open(f'xFOMO{args.tag}.pkl', 'wb'))
