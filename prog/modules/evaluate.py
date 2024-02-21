@@ -48,20 +48,24 @@ def get_xFOMO(model, X_test, y_test, trxps):
     for X,y,trx in zip(X_test,y_test,trxps):
         xscores = []
         masked_X = []
+        masked_y = []
         pad = torch.zeros(4,1000)
         pad_length, X_length = pad.shape[-1], X.shape[-1]
         X = torch.cat([pad,X,pad],dim=1).view(4,-1)
         for i in range(pad_length,pad_length+X_length):
-            X_ = X.clone().T
+            X_, y_ = X.clone().T, y.clone()
             X_[i:i+w_size] = torch.tensor([0.,0.,0.,0.])
+            y_[i:i+w_size] = 0
             masked_X.append(X_.T)
+            masked_y.append(y)
         for i in range(0, len(masked_X), batch_size):
             batch = masked_X[i:i+batch_size]
+            batch_y = masked_y[i:i+batch_size]
             size = len(batch)
             batch = pad_seqs(batch, 4, min_pad=0).cuda()
             batch = batch.view(size, 4, -1)
             outputs = model(batch).view(size,1,-1)
-            for out in outputs:
+            for out, y in zip(outputs, batch_y):
                 out = out.flatten()
                 out = out[pad_length:-pad_length].cpu().detach()
                 pred = bin_pred(out, 0.5)
@@ -70,6 +74,7 @@ def get_xFOMO(model, X_test, y_test, trxps):
         trx_xscores[trx] = xscores
         print(len(trx_xscores))
     return trx_xscores
+
 
 def get_orfs(preds, seqs_test, trxps):
     orfs = dict()

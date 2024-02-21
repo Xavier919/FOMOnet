@@ -239,7 +239,7 @@ class Data:
                         attrs['loc'] = 'uoorf'
                     elif all(x in range(can_start,can_stop) for x in [start,stop]):
                         attrs['loc'] = 'ioorf'
-                    elif not any(x in range(can_start, can_stop) for x in [start,stop]) and (stop-start) > (can_stop-can_start):
+                    elif not any(x in range(can_start, can_stop) for x in [start,stop]) and (stop-start) > (can_stop-can_start) and stop != can_stop:
                         attrs['loc'] = 'oorf'
                     elif start in range(can_start, can_stop) and stop > can_stop:
                         attrs['loc'] = 'doorf'
@@ -247,6 +247,8 @@ class Data:
                         attrs['loc'] = 'dorf'
                     elif start == can_start and stop == can_stop:
                         attrs['loc'] = 'annotated'
+                    elif start != can_start and stop == can_stop:
+                        attrs['loc'] = 'alt_annotated'
                     else:
                         attrs['loc'] = None
             else:
@@ -255,7 +257,7 @@ class Data:
 
         return trx_orfs
 
-    def get_candidate_list(trx_orfs, ensembl_trx):
+    def get_candidate_list(self, trx_orfs, ensembl_trx):
         candidate_list = []
         for trx, orfs in trx_orfs.items():
             biotype = ensembl_trx[trx]['biotype']

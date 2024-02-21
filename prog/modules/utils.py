@@ -134,3 +134,19 @@ def xfomo(iou_list, seq, cds_start, cds_stop, min_motif_len=10):
             results[motif]['stop_dist'].append(stop_dist)
             results[motif]['trx_loc'].append(low_bnd/seq_len)
     return results
+
+
+def tag_fomo_orfs(trx_orfs, orfs):
+    for trx, orfs_ in trx_orfs.items():
+        for orf, attrs in orfs_.items():
+            if trx not in orfs:
+                attrs['fomonet'] = False
+                attrs['fomonet_start'] = None
+            for start, stop in orfs[trx]:
+                if attrs['stop'] == stop:
+                    attrs['fomonet'] = True
+                    attrs['fomonet_start'] = start
+            if attrs['stop'] not in [x[1] for x in orfs[trx]]:
+                attrs['fomonet'] = False
+                attrs['fomonet_start'] = None
+    return trx_orfs

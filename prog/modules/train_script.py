@@ -6,7 +6,6 @@ from torch import nn
 import pickle
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
-import torch.nn as nn
 #project specific imports
 from modules.model import FOMOnet
 from modules.batch_sampler import BatchSampler
