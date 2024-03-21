@@ -239,7 +239,7 @@ class Data:
                         attrs['loc'] = 'uoorf'
                     elif all(x in range(can_start,can_stop) for x in [start,stop]):
                         attrs['loc'] = 'ioorf'
-                    elif not any(x in range(can_start, can_stop) for x in [start,stop]) and (stop-start) > (can_stop-can_start) and stop != can_stop:
+                    elif start < can_start and stop > can_stop:
                         attrs['loc'] = 'oorf'
                     elif start in range(can_start, can_stop) and stop > can_stop:
                         attrs['loc'] = 'doorf'

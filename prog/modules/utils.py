@@ -1,9 +1,16 @@
 import torch
-import random
 import numpy as np
 from itertools import groupby
 from operator import itemgetter
-
+import logomaker
+import pandas as pd
+from sklearn.cluster import DBSCAN
+from collections import defaultdict
+from matplotlib import pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+import matplotlib.patches as patches
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D  
 
 def pad_seqs(seqs, num_chan, min_pad=100):
     pad_seqs = []
@@ -112,30 +119,6 @@ def build_fasta(data, filename):
     with open(filename + '.fa', 'w') as fasta_file:
         fasta_file.write(fasta_text)
 
-def xfomo(iou_list, seq, cds_start, cds_stop, min_motif_len=10):
-    median = np.median(iou_list)
-    std = np.std(iou_list)
-    seq_len = len(seq)
-    idx_arr = np.where(iou_list < median-(2*std))[0]
-    grps_idx = [list(map(itemgetter(1), g)) for k, g in groupby(enumerate(idx_arr), lambda x: x[0]-x[1])]
-    results = dict()
-    for grp in grps_idx:
-        low_bnd, high_bnd = grp[0]-3, grp[-1]+3
-        motif = seq[low_bnd:high_bnd+1]
-        if len(motif) < min_motif_len:
-            continue
-        start_dist, stop_dist = low_bnd-cds_start, low_bnd-cds_stop
-        if motif not in results:
-            results[motif] = {'start_dist': [start_dist],
-                              'stop_dist': [stop_dist],
-                              'trx_loc': [low_bnd/seq_len]} 
-        else:
-            results[motif]['start_dist'].append(start_dist)
-            results[motif]['stop_dist'].append(stop_dist)
-            results[motif]['trx_loc'].append(low_bnd/seq_len)
-    return results
-
-
 def tag_fomo_orfs(trx_orfs, orfs):
     for trx, orfs_ in trx_orfs.items():
         for orf, attrs in orfs_.items():
@@ -150,3 +133,82 @@ def tag_fomo_orfs(trx_orfs, orfs):
                 attrs['fomonet'] = False
                 attrs['fomonet_start'] = None
     return trx_orfs
+
+def xfomo(iou_list, seq, cds_start, cds_stop, min_motif_len=20, min_delta=0.02):
+    median = np.median(iou_list)
+    idx_arr = np.where(iou_list < median-min_delta)[0]
+    grps_idx = [list(map(itemgetter(1), g)) for k, g in groupby(enumerate(idx_arr), lambda x: x[0]-x[1])]
+    results = dict()
+    for grp in grps_idx:
+        rng = 9
+        low_bnd, high_bnd = grp[0]-rng, grp[-1]+rng
+        motif = seq[low_bnd:high_bnd+1]
+        if len(motif) < min_motif_len:
+            continue
+        start_dist, stop_dist = (low_bnd+rng)-cds_start, (low_bnd+rng)-cds_stop
+        if motif not in results:
+            results[motif] = {'start_dist': [start_dist],
+                              'stop_dist': [stop_dist]} 
+        else:
+            results[motif]['start_dist'].append(start_dist)
+            results[motif]['stop_dist'].append(stop_dist)
+    return results
+
+def xfomo(iou_list, seq, cds_start, cds_stop, min_delta=0.1):
+    median = np.median(iou_list)
+    idx_arr = np.where(iou_list < median-min_delta)[0]
+    grps_idx = [list(map(itemgetter(1), g)) for k, g in groupby(enumerate(idx_arr), lambda x: x[0]-x[1])]
+    results = []
+    for grp in grps_idx:
+        rng = 10
+        low_bnd, high_bnd = grp[0]-rng, grp[-1]+rng
+        motif = seq[low_bnd:high_bnd+1]
+        start_dist, stop_dist = (low_bnd+rng)-cds_start, (low_bnd+rng)-cds_stop
+        rel_pos = (low_bnd+high_bnd//2)/len(iou_list)
+        start_dists = [x[1] for x in results]
+        if any(start_dist in range(x-5,x+5) for x in start_dists):
+            continue
+        results.append((motif, start_dist, stop_dist, rel_pos))
+    return results
+
+def apply_dbscan(motifs, eps, min_samples, ngram_range=(5, 5)):
+    vectorizer = CountVectorizer(analyzer='char', ngram_range=ngram_range, binary=False)
+    X = vectorizer.fit_transform(motifs)
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric="cosine")
+    clusters = dbscan.fit_predict(X)
+    clusters_dict = defaultdict(list)
+    for cluster, motif in zip(clusters, motifs):
+        clusters_dict[cluster].append(motif)
+    pca = PCA(n_components=3)
+    X_reduced_3d = pca.fit_transform(X.toarray())
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    unique_clusters = np.unique(clusters)
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_clusters)))
+    for cluster, color in zip(unique_clusters, colors):
+        if cluster == -1:
+            continue
+        indices = clusters == cluster
+        ax.scatter(X_reduced_3d[indices, 0], X_reduced_3d[indices, 1], X_reduced_3d[indices, 2], color=color, label=f'Cluster {cluster}', s=10)
+    ax.set_title('3D visualisation of DBSCAN clustering')
+    ax.set_xlabel('PCA Feature 1')
+    ax.set_ylabel('PCA Feature 2')
+    ax.set_zlabel('PCA Feature 3')
+    plt.legend()
+    plt.savefig('dbscan_cluster_3d.png')
+    plt.show()
+    return clusters, motifs, clusters_dict
+
+def get_logo(cluster_dict, cluster_id, path):
+    motifs = cluster_dict
+    counts_df = pd.DataFrame(columns=['A', 'C', 'G', 'T', 'N'])
+    for motif in motifs:
+        for i, nucleotide in enumerate(motif):
+            if i >= len(counts_df):
+                counts_df.loc[i] = [0, 0, 0, 0, 0]
+            counts_df.loc[i, nucleotide] += 1
+    freq_df = counts_df.div(counts_df.sum(axis=1), axis=0)
+    logo = logomaker.Logo(freq_df, color_scheme='classic')
+    logo.ax.set_ylabel('Frequency')
+    logo.ax.set_title(f'Cluster #{cluster_id} consensus motif')
+    plt.savefig(path)
